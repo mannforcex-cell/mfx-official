@@ -1,0 +1,22 @@
+{
+  "name": "mann-force-x-portal",
+  "version": "1.0.0",
+  "description": "Mann Force X — Official Digital Services Portal Malaysia",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mann-force-x",
+    "digital-services",
+    "malaysia",
+    "game-boosting",
+    "topup"
+  ],
+  "author": "Mann Force X",
+  "license": "UNLICENSED"
+}
