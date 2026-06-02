@@ -1,0 +1,3163 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PISTOL</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #222228;
+      color: #fff;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      background-color: #111116;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .ui-panel {
+      background-color: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      max-width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+    }
+
+    .ui-panel h2 {
+      margin-top: 0;
+      color: #8abec7;
+    }
+
+    .button-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .upgrade-button,
+    .start-button,
+    .revive-button,
+    .restart-button,
+    .admin-button,
+    .difficulty-button,
+    .changelog-button,
+    .close-button,
+    .tower-button,
+    .gamemode-button {
+      background-color: #333;
+      border: 2px solid #555;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      width: 300px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .upgrade-button:hover {
+      background-color: #444;
+      border-color: #8abec7;
+    }
+
+    .upgrade-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #333;
+      border-color: #555;
+    }
+
+    .upgrade-button strong {
+      display: block;
+      font-size: 1.1em;
+      color: #8abec7;
+      margin-bottom: 4px;
+    }
+
+    .upgrade-button p {
+      margin: 0;
+      font-size: 0.9em;
+      color: #ccc;
+    }
+
+    .start-button,
+    .revive-button,
+    .restart-button,
+    .difficulty-button,
+    .tower-button,
+    .gamemode-button {
+      text-align: center;
+      font-size: 1.2em;
+      background-color: #4a7cab;
+      border-color: #3a638a;
+    }
+
+    .start-button:hover,
+    .revive-button:hover,
+    .restart-button:hover,
+    .difficulty-button:hover,
+    .tower-button:hover,
+    .gamemode-button:hover {
+      background-color: #3a638a;
+    }
+
+    .tower-button {
+      background-color: #8b5f8b;
+      border-color: #6a4a6a;
+    }
+
+    .tower-button:hover {
+      background-color: #6a4a6a;
+    }
+
+    .tower-button.hard {
+      background-color: #b0545f;
+      border-color: #8f454e;
+    }
+
+    .tower-button.hard:hover {
+      background-color: #8f454e;
+    }
+
+    .gamemode-button {
+      background-color: #d4b23f;
+      border-color: #a88d32;
+    }
+
+    .gamemode-button:hover {
+      background-color: #a88d32;
+    }
+
+    .revive-button {
+      background-color: #5a9e6b;
+      border-color: #487d56;
+    }
+
+    .revive-button:hover {
+      background-color: #487d56;
+    }
+
+    .restart-button,
+    .close-button {
+      background-color: #b0545f;
+      border-color: #8f454e;
+      text-align: center;
+    }
+
+    .restart-button:hover,
+    .close-button:hover {
+      background-color: #8f454e;
+    }
+
+    .changelog-button {
+      text-align: center;
+      background-color: #555;
+      border-color: #333;
+      font-size: 1em;
+      width: auto;
+      display: inline-block;
+    }
+
+    .changelog-button:hover {
+      background-color: #666;
+    }
+
+    /* Difficulty Colors */
+    .difficulty-button[data-difficulty="1.0"] {
+      background-color: #5a9e6b;
+      border-color: #487d56;
+    }
+
+    /* Easy */
+    .difficulty-button[data-difficulty="1.25"] {
+      background-color: #4a7cab;
+      border-color: #3a638a;
+    }
+
+    /* Normal */
+    .difficulty-button[data-difficulty="1.5"] {
+      background-color: #d4b23f;
+      border-color: #a88d32;
+    }
+
+    /* Medium */
+    .difficulty-button[data-difficulty="1.75"] {
+      background-color: #b0545f;
+      border-color: #8f454e;
+    }
+
+    /* Hard */
+    .difficulty-button[data-difficulty="2.0"] {
+      background-color: #8b5f8b;
+      border-color: #6a4a6a;
+    }
+
+    /* Nightmare */
+    /* HUD */
+    #hud {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 5;
+    }
+
+    .bar-container {
+      width: 100%;
+      height: 24px;
+      background-color: #333;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #555;
+    }
+
+    .bar-fill {
+      height: 100%;
+      transition: width 0.2s ease;
+      border-radius: 10px 0 0 10px;
+    }
+
+    #health-bar-fill {
+      background: linear-gradient(90deg, #c95b6a, #e08c98);
+    }
+
+    #exp-bar-fill {
+      background: linear-gradient(90deg, #69c8d6, #9ee0ea);
+    }
+
+    #hud-info {
+      display: flex;
+      justify-content: space-between;
+      color: #fff;
+      font-weight: bold;
+      padding: 0 10px;
+    }
+
+    /* Pause Button */
+    #pauseButton {
+      display: none;
+      /* Hidden by default */
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 5;
+      background-color: #555;
+      border: 2px solid #777;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #pauseButton:hover {
+      background-color: #666;
+    }
+
+    /* Admin Panels */
+    .admin-panel {
+      display: none;
+      position: absolute;
+      z-index: 20;
+      background: rgba(42, 42, 42, 0.9);
+      padding: 5px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      backdrop-filter: blur(5px);
+    }
+
+    #adminPanel {
+      top: 150px;
+      left: 10px;
+      width: 170px;
+    }
+
+    /* Combined */
+    #sandboxPanelLeft {
+      top: 150px;
+      left: 10px;
+      width: 170px;
+    }
+
+    #sandboxPanelRight {
+      top: 150px;
+      right: 10px;
+      width: 170px;
+    }
+
+    #sandboxPanelBottom {
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      width: 90%;
+      max-width: 1000px;
+      justify-content: center;
+    }
+
+    #adminPanelContainer,
+    #sandboxPanelLeftContainer,
+    #sandboxPanelRightContainer,
+    #sandboxPanelBottomContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .admin-button {
+      width: auto;
+      text-align: center;
+      margin: 0;
+      padding: 5px 8px;
+      font-size: 0.9em;
+    }
+
+    #adminCollapse {
+      width: 100%;
+      margin-bottom: 5px;
+      text-align: center;
+      padding: 5px;
+      font-size: 0.9em;
+    }
+
+    .admin-panel h4 {
+      margin: 0 0 10px 0;
+      color: #8abec7;
+      text-align: center;
+      width: 100%;
+    }
+
+    /* Changelog */
+    #changelogPanel {
+      text-align: left;
+    }
+
+    #changelogPanel ul {
+      padding-left: 20px;
+    }
+
+    #changelogPanel li {
+      margin-bottom: 10px;
+    }
+
+    /* Stats & Upgrades Panel */
+    #statsDisplay,
+    #upgradesDisplay {
+      text-align: left;
+      padding: 10px;
+      background: #333;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      min-width: 300px;
+    }
+
+    #statsDisplay p,
+    #upgradesDisplay p {
+      margin: 8px 0;
+      font-size: 1.1em;
+    }
+
+    #statsDisplay strong {
+      color: #8abec7;
+      min-width: 150px;
+      display: inline-block;
+    }
+
+    #upgradesDisplay strong {
+      color: #8abec7;
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD Elements -->
+  <div id="hud">
+    <div id="hud-info">
+      <span id="level-text">Level: 1</span>
+      <span id="wave-text">Wave: 1</span>
+      <span id="timer-text">Time: 0:00</span>
+      <span id="ammo-text">Ammo: 3/3</span>
+    </div>
+    <div class="bar-container">
+      <div class="bar-fill" id="health-bar-fill" style="width: 100%;"></div>
+    </div>
+    <div class="bar-container">
+      <div class="bar-fill" id="exp-bar-fill" style="width: 0%;"></div>
+    </div>
+  </div>
+
+  <button id="pauseButton">Pause</button>
+
+  <!-- Admin Panel (Standard) -->
+  <div id="adminPanel" class="admin-panel">
+    <button id="adminCollapse" class="admin-button">Collapse</button>
+    <div id="adminPanelContainer">
+      <button id="adminStopSpawn" class="admin-button">Stop Spawns</button>
+      <button id="adminStartSpawn" class="admin-button">Start Spawns</button>
+      <button id="adminSpawnBoss" class="admin-button">Spawn Boss</button>
+      <button id="adminBasicUpg" class="admin-button">Basic Upg</button>
+      <button id="adminRareUpg" class="admin-button">Rare Upg</button>
+      <button id="adminInvincible" class="admin-button">Invincible</button>
+    </div>
+  </div>
+
+  <!-- Sandbox Panels -->
+  <div id="sandboxPanelLeft" class="admin-panel">
+    <h4>Player</h4>
+    <div id="sandboxPanelLeftContainer">
+      <button id="sandboxInvincible" class="admin-button">Toggle Invincible</button>
+      <button id="sandboxResetPlayer" class="admin-button">Reset Player</button>
+    </div>
+  </div>
+  <div id="sandboxPanelRight" class="admin-panel">
+    <h4>Upgrades</h4>
+    <div id="sandboxPanelRightContainer">
+      <button id="sandboxBasicUpg" class="admin-button">Give Random Basic</button>
+      <button id="sandboxRareUpg" class="admin-button">Give Random Rare</button>
+      <button id="sandboxSetStats" class="admin-button">Set Weapon Stats</button>
+    </div>
+  </div>
+  <div id="sandboxPanelBottom" class="admin-panel">
+    <h4>Enemies</h4>
+    <div id="sandboxPanelBottomContainer">
+      <button id="sandboxToggleSpawn" class="admin-button">Toggle Spawns</button>
+      <button id="sandboxSetWave" class="admin-button">Set Wave</button>
+      <button id="sandboxSpawnEnemy" class="admin-button">Spawn Enemy</button>
+      <button id="sandboxSpawnBoss" class="admin-button">Spawn Boss</button>
+      <button id="sandboxSpawnTitan" class="admin-button">Spawn Titan</button>
+      <button id="sandboxSpawnFusion" class="admin-button">Spawn Fusion</button>
+      <button id="sandboxClearEnemies" class="admin-button" style="background-color: #b0545f;">Clear Enemies</button>
+    </div>
+  </div>
+
+  <!-- Start Screen -->
+  <div id="startScreen" class="ui-overlay" style="display: flex;">
+    <div class="ui-panel">
+      <h2>PISTOL</h2>
+      <p>Select a Gamemode.</p>
+      <div class="button-grid">
+        <button id="normalModeButton" class="start-button">Standard Mode</button>
+        <button id="bossRushButton" class="gamemode-button">Boss Rush</button>
+        <button id="sandboxButton" class="gamemode-button">Sandbox</button>
+      </div>
+      <button id="changelogButton" class="changelog-button" style="margin-top: 20px;">v6.2 Changelog</button>
+    </div>
+  </div>
+
+  <!-- Difficulty Screen (for Standard/Tower) -->
+  <div id="difficultyScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2>Standard Mode</h2>
+      <p>Select a difficulty or Tower Mode.</p>
+      <div class="button-grid">
+        <button class="difficulty-button" data-difficulty="1.0">Easy (1.0x)</button>
+        <button class="difficulty-button" data-difficulty="1.25">Normal (1.25x)</button>
+        <button class="difficulty-button" data-difficulty="1.5">Medium (1.5x)</button>
+        <button class="difficulty-button" data-difficulty="1.75">Hard (1.75x)</button>
+        <button class="difficulty-button" data-difficulty="2.0">Nightmare (2.0x)</button>
+        <button id="easyTowerButton" class="tower-button">Easy Tower</button>
+        <button id="hardTowerButton" class="tower-button hard">Hard Tower</button>
+        <button id="backToMenuButton" class="restart-button">Back to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Changelog Screen -->
+  <div id="changelogScreen" class="ui-overlay">
+    <div id="changelogPanel" class="ui-panel">
+      <h2>Update Report (v6.2)</h2>
+      <ul>
+        <li><strong>Critical Bugfix (Boss Rush):</strong> Fixed bug where leveling up from enemies incorrectly reset the boss timer.</li>
+        <li><strong>Feature (Boss Rush Progression):** Boss Rush now spawns Base, Titan/Fusion, and God bosses on a 5/20 wave cycle, just like Standard mode.</li>
+        <li><strong>Sandbox:</strong> Added "Clear All Enemies" button.</li>
+        <li><strong>Sandbox:</strong> Fixed "Reset Player" to also reset all stats and upgrades.</li>
+        <li><strong>Gamemodes:</strong> Added "Sandbox" and "Boss Rush" modes.</li>
+        <li><strong>Titan/Fusion Bosses:</strong> Added `Machine Gun Boss`, `General Boss`, `Slicer Boss`, `Cloner`, `Engineer`, and `Mage`.</li>
+        <li><strong>Final Boss:</strong> Added the `GodBoss`.</li>
+        <li><strong>Admin Panel Unlock:</strong> Admin Panel now unlocks *per-run* by defeating the `GodBoss`.</li>
+        <li><strong>New Upgrades:</strong> Added `Adrenaline`, `Heavy Caliber`, `Lightweight Mags` (Basic) and `Edge Bounce`, `Ricochet`, `+5 Bounces`, `Velocity/Duration x1.5/x3` (Rare).</li>
+        <li><strong>Pause Menu:</strong> Added an "Upgrades" tab to view all collected upgrades.</li>
+      </ul>
+      <button id="closeChangelogButton" class="close-button">Close</button>
+    </div>
+  </div>
+
+  <!-- Floor Complete Screen (for Tower Mode) -->
+  <div id="floorCompleteScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2 id="floorCompleteTitle">Floor 1 Complete!</h2>
+      <p id="floorCompleteDescription">You cleared all 5 waves. Advance to the next floor or return to the title screen.</p>
+      <div class="button-grid">
+        <button id="nextFloorButton" class="start-button">Continue to Next Floor</button>
+        <button id="titleScreenButton" class="restart-button">Return to Title</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pause Screen -->
+  <div id="pauseScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2>Game Paused</h2>
+      <div class="button-grid">
+        <button id="resumeButton" class="start-button">Resume</button>
+        <button id="statsButton" class="difficulty-button" data-difficulty="1.25">Show Stats</button>
+        <button id="upgradesButton" class="difficulty-button" data-difficulty="1.25">Show Upgrades</button>
+        <button id="pauseReturnToMenuButton" class="restart-button">Return to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Screen -->
+  <div id="statsScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2>Player Stats</h2>
+      <div id="statsDisplay">
+        <!-- Stats will be populated by JS -->
+      </div>
+      <button id="closeStatsButton" class="close-button">Close</button>
+    </div>
+  </div>
+
+  <!-- Upgrades Screen -->
+  <div id="upgradesScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2>Collected Upgrades</h2>
+      <div id="upgradesDisplay">
+        <!-- Upgrades will be populated by JS -->
+      </div>
+      <button id="closeUpgradesButton" class="close-button">Close</button>
+    </div>
+  </div>
+
+  <!-- Level Up Screen -->
+  <div id="levelUpScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2>Level Up!</h2>
+      <p>Choose one of three upgrades.</p>
+      <div id="levelUpOptions" class="button-grid">
+        <!-- Upgrade buttons will be inserted here by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Chest Screen (also used for Boss Rush/Hard Tower) -->
+  <div id="chestScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2 id="chestTitle">Boss Defeated!</h2>
+      <p id="chestDescription">Choose your upgrades!</p>
+      <div id="chestOptions" class="button-grid">
+        <!-- Rare upgrade buttons will be inserted here by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameOverScreen" class="ui-overlay">
+    <div class="ui-panel">
+      <h2>Game Over</h2>
+      <p id="gameOverTime"></p>
+      <div class="button-grid">
+        <button id="reviveButton" class="revive-button" style="display: none;">Use Revive (1 Left)</button>
+        <button id="restartButton" class="restart-button">Restart Game</button>
+      </div>
+    </div>
+  </div>
+  <img id="thumbnail" src="data:image/jpeg;base64,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" style="
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      z-index:9999;
+    ">
+
+  <script>
+    // --- Setup ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.style.touchAction = 'none'; // Prevent browser touch gestures
+    const hud = {
+      healthBar: document.getElementById('health-bar-fill'),
+      expBar: document.getElementById('exp-bar-fill'),
+      levelText: document.getElementById('level-text'),
+      waveText: document.getElementById('wave-text'),
+      timerText: document.getElementById('timer-text'),
+      ammoText: document.getElementById('ammo-text')
+    };
+    const screens = {
+      start: document.getElementById('startScreen'),
+      difficulty: document.getElementById('difficultyScreen'),
+      changelog: document.getElementById('changelogScreen'),
+      floorComplete: document.getElementById('floorCompleteScreen'),
+      levelUp: document.getElementById('levelUpScreen'),
+      levelUpOptions: document.getElementById('levelUpOptions'),
+      chest: document.getElementById('chestScreen'),
+      chestOptions: document.getElementById('chestOptions'),
+      gameOver: document.getElementById('gameOverScreen'),
+      gameOverTime: document.getElementById('gameOverTime'),
+      reviveButton: document.getElementById('reviveButton'),
+      restartButton: document.getElementById('restartButton'),
+      // New Pause/Stats/Upgrades screens
+      pauseButton: document.getElementById('pauseButton'),
+      pauseScreen: document.getElementById('pauseScreen'),
+      resumeButton: document.getElementById('resumeButton'),
+      statsButton: document.getElementById('statsButton'),
+      upgradesButton: document.getElementById('upgradesButton'),
+      pauseReturnToMenuButton: document.getElementById('pauseReturnToMenuButton'),
+      statsScreen: document.getElementById('statsScreen'),
+      statsDisplay: document.getElementById('statsDisplay'),
+      closeStatsButton: document.getElementById('closeStatsButton'),
+      upgradesScreen: document.getElementById('upgradesScreen'),
+      upgradesDisplay: document.getElementById('upgradesDisplay'),
+      closeUpgradesButton: document.getElementById('closeUpgradesButton'),
+      // Sandbox Panels
+      sandboxPanels: {
+        left: document.getElementById('sandboxPanelLeft'),
+        right: document.getElementById('sandboxPanelRight'),
+        bottom: document.getElementById('sandboxPanelBottom'),
+      }
+    };
+    let game;
+    // --- Game Class ---
+    class Game {
+      constructor() {
+        this.resizeCanvas(); // Initial resize
+        window.addEventListener('resize', () => this.resizeCanvas());
+        // Keyboard input
+        this.keys = {};
+        window.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);
+        // Joystick
+        this.joystick = new Joystick(this.width, this.height);
+        canvas.addEventListener('touchstart', (e) => this.joystick.onTouchStart(e), false);
+        canvas.addEventListener('touchmove', (e) => this.joystick.onTouchMove(e), false);
+        canvas.addEventListener('touchend', (e) => this.joystick.onTouchEnd(e), false);
+        canvas.addEventListener('touchcancel', (e) => this.joystick.onTouchEnd(e), false);
+        this.init();
+      }
+      init() {
+        // Don't create player yet, wait for start game
+        this.player = null;
+        this.entities = [];
+        this.bullets = [];
+        this.coins = [];
+        this.particles = [];
+        this.enemies = [];
+        this.gameState = 'start';
+        this.gameTime = 0;
+        this.wave = 1;
+        this.spawnTimer = 0;
+        this.bossSpawned = false;
+        this.bossIsDefeated = false; // *** BUGFIX for Boss Rush ***
+        this.stopSpawning = false;
+        this.adminPanelUnlocked = false;
+        this.isTowerMode = false;
+        this.isHardTower = false;
+        this.isSandbox = false;
+        this.isBossRush = false;
+        this.towerFloor = 1;
+        this.difficultyMultiplier = 1.0;
+        this.hardTowerPicks = 0; // For tracking Hard Tower choices
+        screens.start.style.display = 'flex';
+        screens.difficulty.style.display = 'none';
+        screens.changelog.style.display = 'none';
+        screens.floorComplete.style.display = 'none';
+        screens.levelUp.style.display = 'none';
+        screens.chest.style.display = 'none';
+        screens.gameOver.style.display = 'none';
+        screens.pauseScreen.style.display = 'none';
+        screens.statsScreen.style.display = 'none';
+        screens.upgradesScreen.style.display = 'none';
+        screens.pauseButton.style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'none';
+        Object.values(screens.sandboxPanels).forEach(p => p.style.display = 'none');
+        if (this.gameLoopId) {
+          cancelAnimationFrame(this.gameLoopId);
+        }
+      }
+      setTowerDifficulty() {
+        const difficulties = [1.0, 1.25, 1.5, 1.75, 2.0];
+        const floorIndex = Math.min(this.towerFloor - 1, difficulties.length - 1);
+        this.difficultyMultiplier = difficulties[floorIndex];
+        // After Nightmare, keep ramping
+        if (this.towerFloor > difficulties.length) {
+          this.difficultyMultiplier = 2.0 + (this.towerFloor - difficulties.length) * 0.25;
+        }
+      }
+      start(gamemode, isHardTower = false, difficulty = 1.0) {
+        this.isTowerMode = gamemode === 'tower';
+        this.isBossRush = gamemode === 'bossrush';
+        this.isSandbox = gamemode === 'sandbox';
+        this.isHardTower = isHardTower;
+        this.difficultyMultiplier = difficulty;
+        if (this.isTowerMode) {
+          this.towerFloor = 1;
+          this.setTowerDifficulty();
+        }
+        if (this.isSandbox) {
+          this.difficultyMultiplier = 1.25; // Sandbox is "Normal"
+          this.adminPanelUnlocked = true; // Unlock admin
+          Object.values(screens.sandboxPanels).forEach(p => p.style.display = 'block');
+        }
+        // Create new player
+        this.player = new Player(this.width / 2, this.height / 2);
+        this.entities = [this.player];
+        this.bullets = [];
+        this.coins = [];
+        this.particles = [];
+        this.enemies = [];
+        this.wave = 1;
+        this.gameTime = 0;
+        this.gameState = 'running';
+        screens.start.style.display = 'none';
+        screens.difficulty.style.display = 'none';
+        screens.pauseButton.style.display = 'block';
+        this.loop();
+      }
+      loop() {
+        if (this.gameState === 'running') {
+          this.update();
+        }
+        this.draw();
+        this.gameLoopId = requestAnimationFrame(() => this.loop());
+      }
+      update() {
+        this.gameTime += 1 / 60; // Assuming 60 FPS
+        const timeToBoss = this.isTowerMode ? 30 : (this.isBossRush ? 10 : 60);
+        // --- Spawning ---
+        if (!this.stopSpawning) {
+          this.spawnTimer -= 1 / 60;
+          if (this.spawnTimer <= 0) {
+            this.spawnEnemy();
+            let baseSpawnTime;
+            if (this.isTowerMode) {
+              // Tower mode uses wave 1-5, so simple scaling
+              baseSpawnTime = Math.max(0.05, 1.0 - this.wave * 0.15);
+            } else if (this.isBossRush) {
+              baseSpawnTime = 0.5; // Constant spawn for boss rush
+            } else {
+              // Normal mode uses 5-wave chunks for scaling
+              const waveChunk = Math.floor((this.wave - 1) / 5);
+              baseSpawnTime = Math.max(0.05, 1.5 * (0.85 ** waveChunk));
+            }
+            this.spawnTimer = baseSpawnTime / this.difficultyMultiplier;
+          }
+        }
+        // --- Boss Spawn ---
+        if (this.gameTime >= timeToBoss && !this.bossSpawned) {
+          this.spawnBoss();
+          this.bossSpawned = true;
+          this.stopSpawning = true;
+        }
+        // --- Update Entities ---
+        // Use for...of with [...this.array] to allow modification during iteration
+        for (const entity of [...this.entities]) {
+          entity.update(this);
+        }
+        for (const bullet of [...this.bullets]) {
+          bullet.update(this);
+        }
+        for (const coin of [...this.coins]) {
+          coin.update(this);
+        }
+        for (const particle of [...this.particles]) {
+          particle.update(this);
+        }
+        // --- Collision Detection ---
+        this.checkCollisions();
+        // --- Update UI ---
+        this.updateHUD();
+      }
+      draw() {
+        ctx.clearRect(0, 0, this.width, this.height);
+        // Draw entities (coins first, then enemies, then player/bullets)
+        for (const entity of this.entities.sort((a, b) => a.drawOrder - b.drawOrder)) {
+          entity.draw(ctx);
+        }
+        for (const bullet of [...this.bullets]) {
+          bullet.draw(ctx);
+        }
+        for (const coin of [...this.coins]) {
+          coin.draw(ctx);
+        }
+        for (const particle of [...this.particles]) {
+          particle.draw(ctx);
+        }
+        // Draw joystick
+        this.joystick.draw(ctx);
+      }
+      updateHUD() {
+        if (!this.player) return;
+        hud.healthBar.style.width = `${(this.player.health / this.player.stats.maxHealth) * 100}%`;
+        hud.expBar.style.width = `${(this.player.exp / this.player.expToNextLevel) * 100}%`;
+        hud.levelText.textContent = `Level: ${this.player.level}`;
+        let waveStr = `Wave: ${this.wave}`;
+        if (this.isTowerMode) {
+          const mode = this.isHardTower ? "Hard" : "Easy";
+          waveStr = `Tower (${mode}) - Floor ${this.towerFloor} - Wave ${this.wave}`;
+        } else if (this.isBossRush) {
+          waveStr = `Boss Rush - Wave ${this.wave}`;
+        } else if (this.isSandbox) {
+          waveStr = `Sandbox - Wave ${this.wave}`;
+        }
+        hud.waveText.textContent = waveStr;
+        const timeToBoss = this.isTowerMode ? 30 : (this.isBossRush ? 10 : 60);
+        const seconds = Math.floor(timeToBoss - this.gameTime % timeToBoss);
+        hud.timerText.textContent = this.bossSpawned ? "BOSS" : `Boss in: ${seconds}s`;
+        const ammo = this.player.isReloading ? 'R' : this.player.ammoInMag;
+        hud.ammoText.textContent = `Ammo: ${ammo}/${this.player.stats.magSize}`;
+      }
+      checkCollisions() {
+        if (!this.player) return;
+        // Player vs Enemies
+        if (!this.player.isInvincible) {
+          for (const enemy of [...this.enemies]) {
+            if (this.isColliding(this.player, enemy)) {
+              this.player.takeDamage(enemy.damage);
+            }
+          }
+        }
+        // Bullets vs Enemies
+        for (const bullet of [...this.bullets]) {
+          for (const enemy of [...this.enemies]) {
+            if (bullet.isEnemyBullet) continue;
+            if (this.isColliding(bullet, enemy)) {
+              bullet.hit(enemy, this);
+            }
+          }
+        }
+        // Player vs Enemy Bullets
+        if (!this.player.isInvincible) {
+          for (const bullet of [...this.bullets]) {
+            if (!bullet.isEnemyBullet) continue;
+            if (this.isColliding(this.player, bullet)) {
+              this.player.takeDamage(bullet.damage);
+              this.removeBullet(bullet);
+            }
+          }
+        }
+        // Player Orbitals vs Enemy Bullets
+        for (const orbital of [...this.player.orbitals]) {
+          for (const bullet of [...this.bullets]) {
+            if (!bullet.isEnemyBullet) continue;
+            if (this.isColliding(orbital, bullet)) {
+              this.removeBullet(bullet);
+              this.addParticle(new Particle(bullet.x, bullet.y, '#FFF', 0.2));
+            }
+          }
+        }
+        // Player vs Coins
+        for (const coin of [...this.coins]) {
+          if (this.isColliding(this.player, coin)) {
+            this.player.addExp(coin.value);
+            this.removeCoin(coin);
+          }
+        }
+      }
+      isColliding(objA, objB) {
+        // Ensure objects are valid before checking
+        if (!objA || !objB) return false;
+        const dist = Math.hypot(objA.x - objB.x, objA.y - objB.y);
+        return dist < objA.radius + objB.radius;
+      }
+      spawnEnemy() {
+        // Spawn off-screen
+        let x, y;
+        if (Math.random() < 0.5) {
+          x = Math.random() < 0.5 ? -20 : this.width + 20;
+          y = Math.random() * this.height;
+        } else {
+          x = Math.random() * this.width;
+          y = Math.random() < 0.5 ? -20 : this.height + 20;
+        }
+        const rand = Math.random();
+        const currentWave = this.isTowerMode ? (this.towerFloor - 1) * 5 + this.wave : this.wave;
+        if (rand < 0.15 && currentWave > 2) {
+          this.addEnemy(new ShootingEnemy(x, y, currentWave, this.difficultyMultiplier));
+        } else if (rand < 0.35 && currentWave > 1) {
+          this.addEnemy(new StrongEnemy(x, y, currentWave, this.difficultyMultiplier));
+        } else if (rand < 0.6) {
+          this.addEnemy(new FastEnemy(x, y, currentWave, this.difficultyMultiplier));
+        } else {
+          this.addEnemy(new BasicEnemy(x, y, currentWave, this.difficultyMultiplier));
+        }
+      }
+      spawnBoss() {
+        const currentWave = this.isTowerMode ? (this.towerFloor - 1) * 5 + this.wave : this.wave;
+        // --- NEW BOSS SPAWN LOGIC ---
+        // God Boss Logic (Applies to Standard, Tower, AND Boss Rush)
+        if ((currentWave % 20 === 0 && currentWave > 0) ||
+          (this.isTowerMode && this.towerFloor >= 5 && this.wave === 5)) { // Tower capstone
+          this.addEnemy(new GodBoss(this.width / 2, -50, currentWave, this.difficultyMultiplier));
+          return;
+        }
+        // Titan/Fusion Logic (Applies to Standard, Tower, AND Boss Rush)
+        if ((currentWave % 5 === 0 && currentWave > 0) ||
+          (this.isTowerMode && this.wave === 5)) {
+          this.spawnTitanOrFusion(currentWave);
+          return;
+        }
+        // --- Base Boss Logic (Default) ---
+        // (Applies to Standard, Tower, AND Boss Rush on non-milestone waves)
+        const baseBosses = [SpawnerBoss, OrbitalBoss, ShooterBoss];
+        const BossToSpawn = baseBosses[Math.floor(Math.random() * baseBosses.length)];
+        this.addEnemy(new BossToSpawn(this.width / 2, -50, currentWave, this.difficultyMultiplier));
+      }
+      spawnTitanOrFusion(currentWave) {
+        const rand = Math.random();
+        if (rand < 0.5) { // 50/50 split
+          // Spawn Fusion
+          const fusionBosses = [ClonerBoss, EngineerBoss, MageBoss];
+          const BossToSpawn = fusionBosses[Math.floor(Math.random() * fusionBosses.length)];
+          this.addEnemy(new BossToSpawn(this.width / 2, -50, currentWave, this.difficultyMultiplier));
+        } else {
+          // Spawn Titan
+          const titanBosses = [MachineGunBoss, GeneralBoss, SlicerBoss];
+          const BossToSpawn = titanBosses[Math.floor(Math.random() * titanBosses.length)];
+          this.addEnemy(new BossToSpawn(this.width / 2, -50, currentWave, this.difficultyMultiplier));
+        }
+      }
+      onBossDefeated(boss) {
+        this.bossIsDefeated = true; // *** BUGFIX for Boss Rush ***
+        this.player.secondWindUsed = false; // Reset Second Wind
+        // Handle God Boss
+        if (boss instanceof GodBoss) {
+          this.adminPanelUnlocked = true;
+        }
+        // Handle Boss Rush
+        if (this.isBossRush) {
+          this.pauseForMultiUpgrade(3, 1);
+          return; // Don't do normal wave logic
+        }
+        this.player.levelUp(true); // Grant instant level up (shows chest)
+        const currentGlobalWave = this.isTowerMode ? (this.towerFloor - 1) * 5 + this.wave : this.wave;
+        if (this.isTowerMode && this.wave % 5 === 0) {
+          // Don't advance wave, wait for chest screen to close
+          document.getElementById('floorCompleteTitle').textContent = `Floor ${this.towerFloor} Complete!`;
+          document.getElementById('chestTitle').textContent = `Floor ${this.towerFloor} Clear!`;
+          if (this.isHardTower) {
+            document.getElementById('chestDescription').textContent = "Choose TWO rare upgrades to KEEP permanently.";
+          } else {
+            document.getElementById('chestDescription').textContent = "Choose one rare upgrade to KEEP permanently.";
+          }
+        } else {
+          // Normal wave advance
+          this.wave++;
+          this.gameTime = 0;
+          this.stopSpawning = false;
+          this.bossSpawned = false;
+        }
+        // Admin panel check
+        if (this.adminPanelUnlocked && !this.isSandbox) {
+          document.getElementById('adminPanel').style.display = 'block';
+        }
+      }
+      // This runs after player chooses an upgrade from ANY screen
+      resumeFromUpgrade() {
+        screens.levelUp.style.display = 'none';
+        screens.chest.style.display = 'none';
+        // Check if we just finished a tower floor boss
+        if (this.isTowerMode && this.wave % 5 === 0 && this.bossSpawned) {
+          this.gameState = 'floorComplete';
+          screens.floorComplete.style.display = 'flex';
+        } else if (this.isBossRush) {
+          // *** FIX: Boss Rush logic fix ***
+          if (this.bossIsDefeated) { // Only reset if a boss was actually defeated
+            this.wave++;
+            this.gameTime = 0;
+            this.stopSpawning = false;
+            this.bossSpawned = false;
+            this.bossIsDefeated = false;
+          }
+          // Always resume
+          this.gameState = 'running';
+          this.player.startInvincibility(1.0);
+        } else {
+          this.gameState = 'running';
+          this.player.startInvincibility(1.0);
+        }
+      }
+      nextFloor() {
+        // Clear field
+        this.enemies = [];
+        this.bullets = [];
+        this.coins = [];
+        this.particles = [];
+        // Player and their orbitals are part of 'entities', but not 'enemies'
+        // Re-add player and their orbitals
+        this.entities = [this.player, ...this.player.orbitals];
+        // Advance
+        this.wave = 1;
+        this.towerFloor++;
+        this.gameTime = 0;
+        this.setTowerDifficulty();
+        if (this.isHardTower) {
+          this.player.resetForHardTower(this);
+        }
+        this.stopSpawning = false;
+        this.bossSpawned = false;
+        screens.floorComplete.style.display = 'none';
+        this.gameState = 'running';
+      }
+      pauseGame() {
+        if (this.gameState !== 'running') return;
+        this.gameState = 'paused';
+        screens.pauseScreen.style.display = 'flex';
+      }
+      resumeGame() {
+        this.gameState = 'running';
+        screens.pauseScreen.style.display = 'none';
+        screens.statsScreen.style.display = 'none';
+        screens.upgradesScreen.style.display = 'none';
+      }
+      showStats() {
+        const s = this.player.stats;
+        const statsHTML = `
+                    <p><strong>Damage:</strong> ${s.bulletDamage.toFixed(0)}</p>
+                    <p><strong>Fire Rate:</strong> ${(1 / s.fireRate).toFixed(2)} / sec</p>
+                    <p><strong>Reload Time:</strong> ${s.reloadTime.toFixed(2)} sec</p>
+                    <p><strong>Mag Size:</strong> ${s.magSize}</p>
+                    <p><strong>Bullet Speed:</strong> ${s.bulletSpeed}</p>
+                    <p><strong>Pierce:</strong> ${s.bulletPierce}</p>
+                    <p><strong>Bounces:</strong> ${s.chain}</p>
+                    <p><strong>Wall Bounces:</strong> ${s.edgeBounce}</p>
+                    <p><strong>Speed on Bounce:</strong> ${s.ricochet}x</p>
+                    <p><strong>Homing:</strong> ${s.homing > 0 ? 'Yes' : 'No'}</p>
+                    <p><strong>Split Shot:</strong> +${s.splitShot * 2} bullets</p>
+                    <p><strong>Vampirism:</strong> ${(s.vampirism * 100).toFixed(0)}%</p>
+                    <p><strong>Move Speed:</strong> ${s.speed}</p>
+                    <p><strong>Orbitals:</strong> ${s.orbital}</p>
+                `;
+        screens.statsDisplay.innerHTML = statsHTML;
+        screens.statsScreen.style.display = 'flex';
+      }
+      showUpgrades() {
+        let upgradesHTML = '';
+        if (this.player.allUpgrades.length === 0) {
+          upgradesHTML = '<p>No upgrades collected yet.</p>';
+        } else {
+          const upgradeCounts = {};
+          this.player.allUpgrades.forEach(id => {
+            upgradeCounts[id] = (upgradeCounts[id] || 0) + 1;
+          });
+          for (const id in upgradeCounts) {
+            const upgrade = this.player.fullUpgradeList.find(u => u.id === id);
+            const count = upgradeCounts[id] > 1 ? ` (x${upgradeCounts[id]})` : '';
+            upgradesHTML += `<p><strong>${upgrade.name}${count}</strong>: ${upgrade.description}</p>`;
+          }
+        }
+        screens.upgradesDisplay.innerHTML = upgradesHTML;
+        screens.upgradesScreen.style.display = 'flex';
+      }
+      pauseForLevelUp() {
+        this.gameState = 'levelUp';
+        const upgrades = this.player.getUpgradeOptions(3, false);
+        screens.levelUpOptions.innerHTML = '';
+        for (const upgrade of upgrades) {
+          screens.levelUpOptions.appendChild(this.createUpgradeButton(upgrade));
+        }
+        screens.levelUp.style.display = 'flex';
+      }
+      pauseForMultiUpgrade(numBasic, numRare) {
+        this.gameState = 'multiUpgrade';
+        const basicUpgrades = this.player.getUpgradeOptions(numBasic, false);
+        const rareUpgrades = this.player.getUpgradeOptions(numRare, true);
+        const upgrades = [...rareUpgrades, ...basicUpgrades];
+        screens.chestTitle.textContent = "Boss Rush Reward!";
+        screens.chestDescription.textContent = `Choose 1 Rare and 3 Basic Upgrades.`;
+        screens.chestOptions.innerHTML = '';
+        let basicPicks = 0;
+        let rarePicks = 0;
+        for (const upgrade of upgrades) {
+          const button = this.createUpgradeButton(upgrade, false, true);
+          button.onclick = (e) => {
+            e.stopPropagation();
+            if (upgrade.rare) {
+              if (rarePicks < numRare) {
+                rarePicks++;
+                this.player.applyUpgrade(upgrade.id, this);
+                button.disabled = true;
+                button.style.opacity = 0.5;
+              }
+            } else {
+              if (basicPicks < numBasic) {
+                basicPicks++;
+                this.player.applyUpgrade(upgrade.id, this);
+                button.disabled = true;
+                button.style.opacity = 0.5;
+              }
+            }
+            if (basicPicks >= numBasic && rarePicks >= numRare) {
+              // All picks made
+              const parentPanel = button.closest('.button-grid');
+              if (parentPanel) {
+                parentPanel.querySelectorAll('.upgrade-button').forEach(btn => {
+                  btn.disabled = true;
+                  btn.style.opacity = 0.5;
+                });
+              }
+              setTimeout(() => {
+                this.resumeFromUpgrade();
+              }, 50);
+            }
+          };
+          screens.chestOptions.appendChild(button);
+        }
+        screens.chest.style.display = 'flex';
+      }
+      pauseForChest() {
+        this.gameState = 'chest';
+        let upgrades;
+        this.hardTowerPicks = 0; // Reset pick counter
+        let isHardTowerChoice = this.isHardTower && this.wave % 5 === 0 && this.bossSpawned;
+        if (isHardTowerChoice) {
+          // Hard Tower: Show 3 new upgrades to pick 2 from
+          upgrades = this.player.getUpgradeOptions(3, true);
+        } else {
+          // Normal chest: Get 2 new rare upgrades
+          upgrades = this.player.getUpgradeOptions(2, true);
+        }
+        screens.chestOptions.innerHTML = '';
+        for (const upgrade of upgrades) {
+          screens.chestOptions.appendChild(this.createUpgradeButton(upgrade, isHardTowerChoice));
+        }
+        screens.chest.style.display = 'flex';
+      }
+      createUpgradeButton(upgrade, isHardTowerChoice = false, isBossRush = false) {
+        const button = document.createElement('button');
+        button.className = 'upgrade-button';
+        button.innerHTML = `
+                    <strong>${upgrade.name}</strong>
+                    <p>${upgrade.description}</p>
+                `;
+        if (isBossRush) return button; // Special logic handled in pauseForMultiUpgrade
+        button.onclick = (e) => {
+          e.stopPropagation();
+          const parentPanel = button.closest('.button-grid');
+          if (isHardTowerChoice) {
+            // *** CHANGE: Hard Tower logic for picking 2 ***
+            this.player.permanentRareUpgrades.add(upgrade.id);
+            this.player.applyUpgrade(upgrade.id, this, true); // Apply and mark permanent
+            button.disabled = true;
+            button.style.opacity = 0.5;
+            this.hardTowerPicks++;
+            if (this.hardTowerPicks >= 2) {
+              if (parentPanel) {
+                parentPanel.querySelectorAll('.upgrade-button').forEach(btn => {
+                  btn.disabled = true;
+                  btn.style.opacity = 0.5;
+                });
+              }
+              setTimeout(() => {
+                this.resumeFromUpgrade();
+              }, 50);
+            }
+          } else {
+            if (parentPanel) {
+              parentPanel.querySelectorAll('.upgrade-button').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = 0.5;
+              });
+            }
+            this.player.applyUpgrade(upgrade.id, this); // 'this' is 'game'
+            setTimeout(() => {
+              this.resumeFromUpgrade();
+            }, 50);
+          }
+        };
+        return button;
+      }
+      gameOver() {
+        this.gameState = 'gameOver';
+        screens.gameOver.style.display = 'flex';
+        let waveStr = `Wave ${this.wave}`;
+        if (this.isTowerMode) {
+          waveStr = `Floor ${this.towerFloor} - Wave ${this.wave}`;
+        } else if (this.isBossRush) {
+          waveStr = `Boss Rush - Wave ${this.wave}`;
+        }
+        screens.gameOverTime.textContent = `You reached ${waveStr}.`;
+        if (this.player.hasRevive) {
+          screens.reviveButton.style.display = 'block';
+        } else {
+          screens.reviveButton.style.display = 'none';
+        }
+      }
+      revivePlayer() {
+        this.player.hasRevive = false;
+        this.player.health = this.player.stats.maxHealth;
+        this.player.startInvincibility(3.0);
+        this.gameState = 'running';
+        screens.gameOver.style.display = 'none';
+      }
+      // --- Entity Management ---
+      addEntity(entity) {
+        this.entities.push(entity);
+      }
+      removeEntity(entity) {
+        this.entities = this.entities.filter(e => e !== entity);
+      }
+      addBullet(bullet) {
+        this.bullets.push(bullet);
+      }
+      removeBullet(bullet) {
+        this.bullets = this.bullets.filter(b => b !== bullet);
+      }
+      addCoin(coin) {
+        this.coins.push(coin);
+      }
+      removeCoin(coin) {
+        this.coins = this.coins.filter(c => c !== coin);
+      }
+      addParticle(particle) {
+        this.particles.push(particle);
+      }
+      removeParticle(particle) {
+        this.particles = this.particles.filter(p => p !== particle);
+      }
+      addEnemy(enemy) {
+        this.entities.push(enemy);
+        this.enemies.push(enemy);
+      }
+      removeEnemy(enemy) {
+        this.entities = this.entities.filter(e => e !== enemy);
+        this.enemies = this.enemies.filter(e => e !== enemy);
+      }
+      getClosestEnemy(x, y) {
+        let closest = null;
+        let closestDist = Infinity;
+        for (const enemy of this.enemies) {
+          const dist = Math.hypot(x - enemy.x, y - enemy.y);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closest = enemy;
+          }
+        }
+        return closest;
+      }
+      resizeCanvas() {
+        // Full screen canvas
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        canvas.width = this.width;
+        canvas.height = this.height;
+        // Update joystick dimensions
+        if (this.joystick) {
+          this.joystick.setDimensions(this.width, this.height);
+        }
+      }
+    }
+    // --- Player Class ---
+    class Player {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 12;
+        this.color = '#69c8d6'; // Faded cyan
+        this.drawOrder = 10;
+        this.hasRevive = true;
+        this.baseStats = {
+          speed: 300,
+          maxHealth: 100,
+          fireRate: 0.1,
+          reloadTime: 1.5,
+          magSize: 3,
+          bulletSpeed: 500,
+          bulletDuration: 1.0,
+          bulletDamage: 10,
+          bulletPierce: 0,
+          coinMagnet: 50,
+          homing: 0,
+          splitShot: 0,
+          chain: 0,
+          orbital: 0,
+          orbitalDamage: 25,
+          orbitalRadius: 60,
+          globalMagnet: false,
+          vampirism: 0,
+          secondWind: false,
+          shockwave: 0,
+          edgeBounce: 0,
+          ricochet: 0,
+        };
+        this.stats = JSON.parse(JSON.stringify(this.baseStats));
+        this.permanentRareUpgrades = new Set();
+        this.secondWindUsed = false;
+        this.health = this.stats.maxHealth;
+        this.level = 1;
+        this.exp = 0;
+        this.expToNextLevel = 10;
+        this.ammoInMag = this.stats.magSize;
+        this.isReloading = false;
+        this.shootTimer = 0;
+        this.reloadTimer = 0;
+        this.isInvincible = false;
+        this.invincibilityTimer = 0;
+        this.isPermanentlyInvincible = false;
+        this.orbitals = [];
+        this.allUpgrades = []; // For tracking
+        this.initUpgrades();
+      }
+      // *** NEW: Full reset for Sandbox ***
+      reset(game) {
+        // Clear orbitals
+        for (const orb of this.orbitals) {
+          game.removeEntity(orb);
+        }
+        this.orbitals = [];
+        // Reset stats to base
+        this.stats = JSON.parse(JSON.stringify(this.baseStats));
+        this.takenUpgrades = new Set();
+        this.allUpgrades = [];
+        this.permanentRareUpgrades = new Set(); // Also reset perm upgrades
+        // Refill health, ammo
+        this.health = this.stats.maxHealth;
+        this.hasRevive = true;
+        this.ammoInMag = this.stats.magSize;
+        this.isReloading = false;
+        this.level = 1;
+        this.exp = 0;
+        this.expToNextLevel = 10;
+      }
+      resetForHardTower(game) {
+        // Clear orbitals
+        for (const orb of this.orbitals) {
+          game.removeEntity(orb);
+        }
+        this.orbitals = [];
+        // Reset stats to base
+        this.stats = JSON.parse(JSON.stringify(this.baseStats));
+        this.takenUpgrades = new Set();
+        this.allUpgrades = [];
+        // Re-apply permanent upgrades
+        for (const upgradeId of this.permanentRareUpgrades) {
+          this.applyUpgrade(upgradeId, game, true); // True = isPermanent
+        }
+        // Refill health, ammo
+        this.health = this.stats.maxHealth;
+        this.ammoInMag = this.stats.magSize;
+        this.level = 1;
+        this.exp = 0;
+        this.expToNextLevel = 10;
+      }
+      update(game) {
+        // --- Second Wind ---
+        if (this.stats.secondWind && !this.secondWindUsed && this.health <= this.stats.maxHealth * 0.2) {
+          this.secondWindUsed = true;
+          this.startInvincibility(5.0);
+          const originalSpeed = this.stats.speed;
+          this.stats.speed *= 1.5;
+          setTimeout(() => {
+            this.stats.speed = originalSpeed;
+          }, 5000);
+        }
+        // --- Movement ---
+        let dx = 0;
+        let dy = 0;
+        if (game.joystick.isActive) {
+          dx = game.joystick.moveVector.x;
+          dy = game.joystick.moveVector.y;
+        } else {
+          if (game.keys['w'] || game.keys['arrowup']) dy -= 1;
+          if (game.keys['s'] || game.keys['arrowdown']) dy += 1;
+          if (game.keys['a'] || game.keys['arrowleft']) dx -= 1;
+          if (game.keys['d'] || game.keys['arrowright']) dx += 1;
+        }
+        if (dx !== 0 || dy !== 0) {
+          const mag = Math.hypot(dx, dy);
+          if (!game.joystick.isActive && mag > 0) {
+            dx /= mag;
+            dy /= mag;
+          }
+          this.x += dx * this.stats.speed * (1 / 60);
+          this.y += dy * this.stats.speed * (1 / 60);
+        }
+        this.x = Math.max(this.radius, Math.min(game.width - this.radius, this.x));
+        this.y = Math.max(this.radius, Math.min(game.height - this.radius, this.y));
+        // --- Invincibility ---
+        if (this.isPermanentlyInvincible) {
+          this.isInvincible = true;
+          this.invincibilityTimer = 999999;
+        } else if (this.isInvincible) {
+          this.invincibilityTimer -= 1 / 60;
+          if (this.invincibilityTimer <= 0) {
+            this.isInvincible = false;
+          }
+        }
+        // --- Shooting Logic ---
+        if (this.isReloading) {
+          this.reloadTimer -= 1 / 60;
+          if (this.reloadTimer <= 0) {
+            this.isReloading = false;
+            this.ammoInMag = this.stats.magSize;
+            if (this.stats.shockwave > 0) {
+              this.doShockwave(game);
+            }
+          }
+        } else {
+          this.shootTimer -= 1 / 60;
+          if (this.shootTimer <= 0 && this.ammoInMag > 0) {
+            const target = game.getClosestEnemy(this.x, this.y);
+            if (target) {
+              this.shoot(game, target);
+              this.ammoInMag--;
+              this.shootTimer = this.stats.fireRate;
+              if (this.ammoInMag <= 0) {
+                this.isReloading = true;
+                this.reloadTimer = this.stats.reloadTime;
+              }
+            }
+          }
+        }
+        // --- Orbital Management ---
+        if (this.orbitals.length < this.stats.orbital) {
+          const index = this.orbitals.length;
+          const angleOffset = (index * (Math.PI * 2)) / (this.stats.orbital);
+          const orbital = new Orbital(this, angleOffset, this.stats.orbitalDamage, this.stats.orbitalRadius, this.stats.orbital);
+          this.orbitals.push(orbital);
+          game.addEntity(orbital);
+          this.orbitals.forEach((orb, i) => {
+            orb.totalOrbitals = this.stats.orbital;
+            orb.angleOffset = (i * (Math.PI * 2)) / this.stats.orbital;
+          });
+        }
+      }
+      doShockwave(game) {
+        const range = 50 + this.stats.shockwave * 20;
+        const damage = 10 * this.stats.shockwave;
+        game.addParticle(new Particle(this.x, this.y, '#FFFFFF', 0.3, range));
+        for (const enemy of [...game.enemies]) {
+          const dist = Math.hypot(this.x - enemy.x, this.y - enemy.y);
+          if (dist < range) {
+            enemy.takeDamage(damage, game);
+            const angle = Math.atan2(enemy.y - this.y, enemy.x - this.x);
+            enemy.x += Math.cos(angle) * (range - dist) * 0.5;
+            enemy.y += Math.sin(angle) * (range - dist) * 0.5;
+          }
+        }
+      }
+      shoot(game, target) {
+        const angle = Math.atan2(target.y - this.y, target.x - this.x);
+        const baseProps = {
+          x: this.x,
+          y: this.y,
+          speed: this.stats.bulletSpeed,
+          duration: this.stats.bulletDuration,
+          damage: this.stats.bulletDamage,
+          pierce: this.stats.bulletPierce,
+          homing: this.stats.homing,
+          chain: this.stats.chain,
+          edgeBounce: this.stats.edgeBounce,
+          ricochet: this.stats.ricochet,
+          isEnemyBullet: false
+        };
+        game.addBullet(new Bullet(angle, baseProps));
+        // Split Shot
+        for (let i = 1; i <= this.stats.splitShot; i++) {
+          const spread = 0.2; // ~12 degrees
+          game.addBullet(new Bullet(angle + spread * i, baseProps));
+          game.addBullet(new Bullet(angle - spread * i, baseProps));
+        }
+      }
+      draw(ctx) {
+        // Blink when invincible
+        if (this.isInvincible && !this.isPermanentlyInvincible && Math.floor(this.invincibilityTimer * 20) % 2 === 0) {
+          return;
+        }
+        ctx.fillStyle = this.color;
+        if (this.isPermanentlyInvincible) {
+          ctx.fillStyle = '#FFD700'; // Gold if admin invincible
+        }
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        // Gun barrel
+        ctx.fillStyle = '#aaa';
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const target = game.getClosestEnemy(this.x, this.y);
+        if (target) {
+          ctx.rotate(Math.atan2(target.y - this.y, target.x - this.x));
+        }
+        ctx.fillRect(this.radius - 2, -3, 10, 6);
+        ctx.restore();
+      }
+      takeDamage(amount) {
+        if (this.isInvincible) return;
+        this.health -= amount;
+        this.startInvincibility(1.0);
+        if (this.health <= 0) {
+          this.health = 0;
+          game.gameOver();
+        }
+      }
+      addExp(amount) {
+        this.exp += amount;
+        while (this.exp >= this.expToNextLevel) {
+          this.levelUp();
+        }
+      }
+      levelUp(isBossKill = false) {
+        if (isBossKill) {
+          this.level++;
+          this.health = this.stats.maxHealth;
+          game.pauseForChest();
+        } else {
+          this.exp -= this.expToNextLevel;
+          this.level++;
+          this.expToNextLevel = Math.floor(this.expToNextLevel * 1.2 + 5);
+          this.health = this.stats.maxHealth;
+          game.pauseForLevelUp();
+        }
+      }
+      startInvincibility(duration) {
+        this.isInvincible = true;
+        this.invincibilityTimer = Math.max(this.invincibilityTimer, duration);
+      }
+      // --- Upgrades ---
+      initUpgrades() {
+        this.upgradePool = [{
+            id: 'fireRate',
+            name: 'Faster Firing',
+            description: 'Increases firing speed by 15%.',
+            rare: false,
+            apply: (p) => p.stats.fireRate *= 0.85
+          },
+          {
+            id: 'reloadSpeed',
+            name: 'Faster Reload',
+            description: 'Reduces reload time by 20%.',
+            rare: false,
+            apply: (p) => p.stats.reloadTime *= 0.80
+          },
+          {
+            id: 'magSize',
+            name: 'Bigger Magazine',
+            description: '+1 bullet to magazine size.',
+            rare: false,
+            apply: (p) => p.stats.magSize += 1
+          },
+          {
+            id: 'bulletSpeed',
+            name: 'Bullet Velocity',
+            description: 'Bullets travel 25% faster.',
+            rare: false,
+            apply: (p) => p.stats.bulletSpeed *= 1.25
+          },
+          {
+            id: 'bulletDuration',
+            name: 'Bullet Range',
+            description: 'Bullets last 25% longer.',
+            rare: false,
+            apply: (p) => p.stats.bulletDuration *= 1.25
+          },
+          {
+            id: 'pierce',
+            name: '+1 Pierce',
+            description: 'Bullets can hit one additional enemy.',
+            rare: false,
+            apply: (p) => p.stats.bulletPierce += 1
+          },
+          {
+            id: 'damage',
+            name: 'Damage Up',
+            description: '+5 bullet damage.',
+            rare: false,
+            apply: (p) => p.stats.bulletDamage += 5
+          },
+          {
+            id: 'health',
+            name: 'Max Health',
+            description: '+20 Max HP.',
+            rare: false,
+            apply: (p) => {
+              p.stats.maxHealth += 20;
+              p.health += 20;
+            }
+          },
+          {
+            id: 'speed',
+            name: 'Move Speed',
+            description: 'Move 10% faster.',
+            rare: false,
+            apply: (p) => p.stats.speed *= 1.10
+          },
+          {
+            id: 'magnet',
+            name: 'Coin Magnet',
+            description: 'Pulls coins from 50% further.',
+            rare: false,
+            apply: (p) => p.stats.coinMagnet *= 1.50
+          },
+          {
+            id: 'chain',
+            name: '+1 Bounce',
+            description: 'Bullets chain to 1 additional enemy.',
+            rare: false,
+            apply: (p) => p.stats.chain += 1
+          },
+          // Surprise Upgrades
+          {
+            id: 'adrenaline',
+            name: 'Adrenaline',
+            description: '+5% Move Speed, +5% Reload Speed.',
+            rare: false,
+            apply: (p) => {
+              p.stats.speed *= 1.05;
+              p.stats.reloadTime *= 0.95;
+            }
+          },
+          {
+            id: 'heavyCaliber',
+            name: 'Heavy Caliber',
+            description: '+3 Damage, -5% Fire Rate.',
+            rare: false,
+            apply: (p) => {
+              p.stats.bulletDamage += 3;
+              p.stats.fireRate *= 1.05;
+            }
+          },
+          {
+            id: 'lightMags',
+            name: 'Lightweight Mags',
+            description: '+1 Mag Size, +5% Reload Speed.',
+            rare: false,
+            apply: (p) => {
+              p.stats.magSize += 1;
+              p.stats.reloadTime *= 0.95;
+            }
+          },
+        ];
+        this.rareUpgradePool = [{
+            id: 'atkSpeed3x',
+            name: 'OVERCLOCK',
+            description: '3x Attack Speed (Fire Rate & Reload).',
+            rare: true,
+            apply: (p) => {
+              p.stats.fireRate /= 3;
+              p.stats.reloadTime /= 3;
+            }
+          },
+          {
+            id: 'dmg3x',
+            name: 'POWER SHOT',
+            description: '3x Bullet Damage.',
+            rare: true,
+            apply: (p) => p.stats.bulletDamage *= 3
+          },
+          {
+            id: 'instantReload',
+            name: 'AUTO-LOADER',
+            description: 'Reload is now instant.',
+            rare: true,
+            apply: (p) => p.stats.reloadTime = 0.01
+          },
+          {
+            id: 'homing',
+            name: 'HEATSEEKERS',
+            description: 'Bullets strongly home in on enemies.',
+            rare: true,
+            apply: (p) => p.stats.homing += 5
+          },
+          {
+            id: 'splitShot',
+            name: 'SPLIT SHOT',
+            description: 'Fire 2 additional projectiles in a cone.',
+            rare: true,
+            apply: (p) => p.stats.splitShot += 1
+          },
+          {
+            id: 'chain5',
+            name: '+5 Bounces',
+            description: 'Bullets chain to 5 additional enemies.',
+            rare: true,
+            apply: (p) => p.stats.chain += 5
+          },
+          {
+            id: 'orbital',
+            name: 'FORCEFIELD',
+            description: 'Gain a rotating shield that damages enemies.',
+            rare: true,
+            apply: (p, game) => {
+              p.stats.orbital += 1;
+            }
+          },
+          {
+            id: 'globalMagnet',
+            name: 'GLOBAL MAGNET',
+            description: 'All coins on screen are pulled to you.',
+            rare: true,
+            apply: (p) => p.stats.globalMagnet = true
+          },
+          {
+            id: 'vampirism',
+            name: 'VAMPIRISM',
+            description: 'Heal for 1% of all damage dealt.',
+            rare: true,
+            apply: (p) => p.stats.vampirism += 0.01
+          },
+          {
+            id: 'secondWind',
+            name: 'SECOND WIND',
+            description: 'Once per wave, drop below 20% HP to gain a 5s shield & speed boost.',
+            rare: true,
+            apply: (p) => p.stats.secondWind = true
+          },
+          {
+            id: 'shockwave',
+            name: 'SHOCKWAVE',
+            description: 'Reloading emits a damaging shockwave that pushes enemies.',
+            rare: true,
+            apply: (p) => p.stats.shockwave += 1
+          },
+          {
+            id: 'edgeBounce',
+            name: 'Edge Bounce',
+            description: 'Bullets bounce off the edge of the map once.',
+            rare: true,
+            apply: (p) => p.stats.edgeBounce += 1
+          },
+          {
+            id: 'ricochet',
+            name: 'Ricochet',
+            description: 'Bullets gain speed after bouncing off a wall. (Max 3)',
+            rare: true,
+            apply: (p) => p.stats.ricochet = Math.min(3, p.stats.ricochet + 1)
+          },
+          {
+            id: 'vel15',
+            name: 'Velocity x1.5',
+            description: '+50% Bullet Speed. (Stackable)',
+            rare: true,
+            apply: (p) => p.stats.bulletSpeed *= 1.5
+          },
+          {
+            id: 'dur15',
+            name: 'Duration x1.5',
+            description: '+50% Bullet Duration/Range. (Stackable)',
+            rare: true,
+            apply: (p) => p.stats.bulletDuration *= 1.5
+          },
+          {
+            id: 'vel3',
+            name: 'Velocity x3',
+            description: '+200% Bullet Speed. (Unstackable)',
+            rare: true,
+            apply: (p) => p.stats.bulletSpeed *= 3
+          },
+          {
+            id: 'dur3',
+            name: 'Duration x3',
+            description: '+200% Bullet Duration/Range. (Unstackable)',
+            rare: true,
+            apply: (p) => p.stats.bulletDuration *= 3
+          },
+        ];
+        this.fullUpgradeList = [...this.upgradePool, ...this.rareUpgradePool];
+        this.takenUpgrades = new Set();
+      }
+      getUpgradeOptions(count, rare = false) {
+        const pool = rare ? this.rareUpgradePool : this.upgradePool;
+        const isStackable = (id) => {
+          const stackableRare = ['vampirism', 'shockwave', 'orbital', 'chain5', 'edgeBounce', 'ricochet', 'vel15', 'dur15'];
+          const stackableBasic = ['magSize', 'pierce', 'damage', 'health', 'speed', 'magnet', 'chain', 'adrenaline', 'heavyCaliber', 'lightMags'];
+          return stackableRare.includes(id) || stackableBasic.includes(id);
+        }
+        const available = pool.filter(upg => {
+          if (upg.id === 'ricochet' && this.stats.ricochet >= 3) return false; // Max stack for ricochet
+          return isStackable(upg.id) || !this.takenUpgrades.has(upg.id);
+        });
+        const shuffled = available.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+      }
+      getHeldRareUpgrades() {
+        const held = [];
+        const rareIds = new Set(this.rareUpgradePool.map(u => u.id));
+        for (const upgId of new Set(this.allUpgrades)) { // Use Set to get unique IDs
+          if (rareIds.has(upgId)) {
+            held.push(this.fullUpgradeList.find(u => u.id === upgId));
+          }
+        }
+        return held;
+      }
+      applyUpgrade(upgradeId, game, isPermanent = false) {
+        const upgrade = this.fullUpgradeList.find(upg => upg.id === upgradeId);
+        if (upgrade) {
+          upgrade.apply(this, game);
+          this.allUpgrades.push(upgrade.id);
+          if (isPermanent) {
+            this.permanentRareUpgrades.add(upgrade.id);
+          }
+          const isStackable = (id) => {
+            const stackableRare = ['vampirism', 'shockwave', 'orbital', 'chain5', 'edgeBounce', 'ricochet', 'vel15', 'dur15'];
+            const stackableBasic = ['magSize', 'pierce', 'damage', 'health', 'speed', 'magnet', 'chain', 'adrenaline', 'heavyCaliber', 'lightMags'];
+            return stackableRare.includes(id) || stackableBasic.includes(id);
+          }
+          if (!isStackable(upgrade.id)) {
+            this.takenUpgrades.add(upgrade.id);
+          }
+          this.ammoInMag = this.stats.magSize;
+        }
+      }
+    }
+    // --- Bullet Class ---
+    class Bullet {
+      constructor(angle, props) {
+        this.x = props.x;
+        this.y = props.y;
+        this.radius = 5;
+        this.color = props.isEnemyBullet ? '#ff6b81' : '#d1d96d';
+        this.drawOrder = 5;
+        this.speed = props.speed;
+        this.duration = props.duration;
+        this.damage = props.damage;
+        this.pierce = props.pierce;
+        this.homing = props.homing;
+        this.chain = props.chain;
+        this.edgeBounceLeft = props.edgeBounce || 0;
+        this.ricochet = props.ricochet || 0;
+        this.chainTargets = [];
+        this.id = Math.random();
+        this.isEnemyBullet = props.isEnemyBullet;
+        this.isOrbitalBullet = props.isOrbitalBullet || false;
+        this.vx = Math.cos(angle) * this.speed;
+        this.vy = Math.sin(angle) * this.speed;
+        this.subOrbitals = [];
+        if (this.isOrbitalBullet) {
+          for (let i = 0; i < 3; i++) {
+            const orb = new SubOrbital(this, (i * (Math.PI * 2)) / 3);
+            this.subOrbitals.push(orb);
+            game.addEntity(orb);
+          }
+        }
+      }
+      update(game) {
+        this.duration -= 1 / 60;
+        if (this.duration <= 0) {
+          this.die(game);
+          return;
+        }
+        // Homing (only for player bullets)
+        if (this.homing > 0 && !this.isEnemyBullet) {
+          const target = game.getClosestEnemy(this.x, this.y);
+          if (target) {
+            const angle = Math.atan2(target.y - this.y, target.x - this.x);
+            this.vx = (this.vx * (60 - this.homing) + Math.cos(angle) * this.speed * this.homing) / 60;
+            this.vy = (this.vy * (60 - this.homing) + Math.sin(angle) * this.speed * this.homing) / 60;
+            const mag = Math.hypot(this.vx, this.vy);
+            this.vx = (this.vx / mag) * this.speed;
+            this.vy = (this.vy / mag) * this.speed;
+          }
+        }
+        this.x += this.vx * (1 / 60);
+        this.y += this.vy * (1 / 60);
+        // --- Wall Bounce Logic ---
+        let bounced = false;
+        if (this.x <= this.radius || this.x >= game.width - this.radius) {
+          if (this.edgeBounceLeft > 0) {
+            this.edgeBounceLeft--;
+            this.vx *= -1;
+            if (this.ricochet > 0) this.speed *= 1.2; // New Ricochet logic
+            this.x = Math.max(this.radius + 1, Math.min(game.width - this.radius - 1, this.x)); // Clamp
+            bounced = true;
+          } else {
+            this.die(game);
+            return; // Stop update
+          }
+        }
+        if (this.y <= this.radius || this.y >= game.height - this.radius) {
+          if (this.edgeBounceLeft > 0) {
+            this.edgeBounceLeft--;
+            this.vy *= -1;
+            if (this.ricochet > 0) this.speed *= 1.2; // New Ricochet logic
+            this.y = Math.max(this.radius + 1, Math.min(game.height - this.radius - 1, this.y)); // Clamp
+            bounced = true;
+          } else {
+            this.die(game);
+            return; // Stop update
+          }
+        }
+        if (bounced && this.ricochet > 0) {
+          // Re-calculate velocity vector with new speed
+          const mag = Math.hypot(this.vx, this.vy);
+          this.vx = (this.vx / mag) * this.speed;
+          this.vy = (this.vy / mag) * this.speed;
+        }
+      }
+      die(game) {
+        // Kill sub-orbitals
+        for (const orb of this.subOrbitals) {
+          game.removeEntity(orb);
+        }
+        game.removeBullet(this);
+      }
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      hit(enemy, game) {
+        if (this.chainTargets.includes(enemy.id)) return; // Already hit this one
+        const damageDealt = enemy.takeDamage(this.damage, game);
+        if (game.player.stats.vampirism > 0 && damageDealt > 0) {
+          game.player.health = Math.min(game.player.stats.maxHealth, game.player.health + (damageDealt * game.player.stats.vampirism));
+        }
+        this.chainTargets.push(enemy.id);
+        // Chain
+        if (this.chain > 0) {
+          this.chain--;
+          let closest = null;
+          let closestDist = 100; // Chain radius
+          for (const otherEnemy of game.enemies) {
+            if (!this.chainTargets.includes(otherEnemy.id)) {
+              const dist = Math.hypot(this.x - otherEnemy.x, this.y - otherEnemy.y);
+              if (dist < closestDist) {
+                closest = otherEnemy;
+                closestDist = dist;
+              }
+            }
+          }
+          if (closest) {
+            // A chained hit doesn't consume pierce
+            this.hit(closest, game);
+          }
+        }
+        if (this.pierce > 0) {
+          this.pierce--;
+        } else {
+          this.die(game);
+        }
+      }
+    }
+    // --- SubOrbital Class (for bullets) ---
+    class SubOrbital {
+      constructor(parentBullet, angleOffset) {
+        this.parent = parentBullet;
+        this.angleOffset = angleOffset;
+        this.damage = parentBullet.damage * 0.25; // 25% of parent's damage
+        this.orbitDistance = 15;
+        this.x = 0;
+        this.y = 0;
+        this.drawOrder = 6;
+        this.color = '#FFF';
+        this.orbitalRadius = 3;
+        this.id = Math.random();
+        this.rotationSpeed = 8;
+        this.hitCooldown = 0.5;
+        this.hitTimer = 0;
+        this.enemiesHit = new Set();
+      }
+      update(game) {
+        if (!game.bullets.includes(this.parent)) {
+          game.removeEntity(this);
+          return;
+        }
+        if (this.hitTimer > 0) {
+          this.hitTimer -= 1 / 60;
+        } else {
+          this.enemiesHit.clear();
+        }
+        this.angle = (game.gameTime * this.rotationSpeed) + this.angleOffset;
+        this.x = this.parent.x + Math.cos(this.angle) * this.orbitDistance;
+        this.y = this.parent.y + Math.sin(this.angle) * this.orbitDistance;
+        if (this.hitTimer <= 0) {
+          if (this.parent.isEnemyBullet) {
+            // Enemy sub-orbital hits player
+            if (game.isColliding(this, game.player)) {
+              game.player.takeDamage(this.damage);
+              this.hitTimer = this.hitCooldown;
+            }
+          } else {
+            // Player sub-orbital hits enemies
+            for (const enemy of game.enemies) {
+              if (!this.enemiesHit.has(enemy.id) && game.isColliding(this, enemy)) {
+                enemy.takeDamage(this.damage, game);
+                this.enemiesHit.add(enemy.id);
+                this.hitTimer = this.hitCooldown;
+              }
+            }
+          }
+        }
+      }
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.orbitalRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      get radius() {
+        return this.orbitalRadius;
+      }
+    }
+    // --- Orbital Class (for Player/Enemies) ---
+    class Orbital {
+      constructor(player, angleOffset, damage, radius, totalOrbitals) {
+        this.parent = player;
+        this.angleOffset = angleOffset;
+        this.damage = damage;
+        this.orbitDistance = radius;
+        this.totalOrbitals = totalOrbitals;
+        this.x = 0;
+        this.y = 0;
+        this.drawOrder = 9;
+        this.color = '#FFFFFF';
+        this.orbitalRadius = 8;
+        this.id = Math.random();
+        this.isEnemyOrbital = (player instanceof Enemy);
+        this.rotationSpeed = this.isEnemyOrbital ? 4 : 2;
+        this.hitCooldown = 0.5;
+        this.hitTimer = 0;
+        this.enemiesHit = new Set();
+        // For firing
+        this.canFire = false;
+        this.shootTimer = 1.0;
+        this.bulletDamage = 0;
+        this.isOrbitalBullet = false;
+      }
+      update(game) {
+        if (this.hitTimer > 0) {
+          this.hitTimer -= 1 / 60;
+        } else {
+          this.enemiesHit.clear();
+        }
+        this.angle = (game.gameTime * this.rotationSpeed) + this.angleOffset;
+        this.x = this.parent.x + Math.cos(this.angle) * this.orbitDistance;
+        this.y = this.parent.y + Math.sin(this.angle) * this.orbitDistance;
+        // Shooting logic
+        if (this.canFire) {
+          this.shootTimer -= 1 / 60;
+          if (this.shootTimer <= 0) {
+            this.fire(game);
+            this.shootTimer = this.parent instanceof GodBoss ? 1.5 : 2.5; // God boss shields fire faster
+          }
+        }
+        // Collision logic
+        if (this.hitTimer <= 0) {
+          if (this.isEnemyOrbital) {
+            if (game.isColliding(this, game.player)) {
+              game.player.takeDamage(this.damage);
+              this.hitTimer = this.hitCooldown;
+            }
+          } else {
+            for (const enemy of game.enemies) {
+              if (!this.enemiesHit.has(enemy.id) && game.isColliding(this, enemy)) {
+                const currentWave = game.isTowerMode ? (game.towerFloor - 1) * 5 + game.wave : game.wave;
+                const scaledDamage = this.damage + currentWave;
+                enemy.takeDamage(scaledDamage, game);
+                this.enemiesHit.add(enemy.id);
+                this.hitTimer = this.hitCooldown;
+              }
+            }
+          }
+        }
+      }
+      fire(game) {
+        const target = game.player;
+        const angle = Math.atan2(target.y - this.y, target.x - this.x);
+        const bulletProps = {
+          x: this.x,
+          y: this.y,
+          speed: 300,
+          duration: 2.0,
+          damage: this.bulletDamage,
+          isEnemyBullet: true,
+          isOrbitalBullet: this.isOrbitalBullet
+        };
+        game.addBullet(new Bullet(angle, bulletProps));
+      }
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.orbitalRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      get radius() {
+        return this.orbitalRadius;
+      }
+    }
+    // --- Bouncing Shield Class (for Slicer Boss) ---
+    class BouncingShield {
+      constructor(x, y, damage, game) {
+        this.x = x;
+        this.y = y;
+        this.radius = 20;
+        this.color = '#00e5ff';
+        this.damage = damage;
+        this.drawOrder = 15;
+        this.id = Math.random();
+        this.speed = 300;
+        this.vx = (Math.random() < 0.5 ? 1 : -1) * this.speed;
+        this.vy = (Math.random() < 0.5 ? 1 : -1) * this.speed;
+        this.hitCooldown = 1.0;
+        this.hitTimer = 0;
+      }
+      update(game) {
+        if (this.hitTimer > 0) {
+          this.hitTimer -= 1 / 60;
+        }
+        this.x += this.vx * (1 / 60);
+        this.y += this.vy * (1 / 60);
+        if (this.x <= this.radius || this.x >= game.width - this.radius) {
+          this.vx *= -1;
+        }
+        if (this.y <= this.radius || this.y >= game.height - this.radius) {
+          this.vy *= -1;
+        }
+        if (this.hitTimer <= 0 && game.isColliding(this, game.player)) {
+          game.player.takeDamage(this.damage);
+          this.hitTimer = this.hitCooldown;
+        }
+      }
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+      }
+    }
+    // --- Enemy Base Class ---
+    class Enemy {
+      constructor(x, y, health, radius, color, damage, speed, coinValue) {
+        this.x = x;
+        this.y = y;
+        this.health = health;
+        this.maxHealth = health;
+        this.radius = radius;
+        this.color = color;
+        this.damage = damage;
+        this.speed = speed;
+        this.coinValue = coinValue;
+        this.drawOrder = 8;
+        this.id = Math.random();
+        this.isDead = false;
+        this.orbitals = [];
+        this.canFireFromOrbitals = false;
+        this.isBuffed = false; // For God Boss spawns
+      }
+      update(game) {
+        // Don't update if dead
+        if (this.isDead) return;
+        const target = game.player;
+        const angle = Math.atan2(target.y - this.y, target.x - this.x);
+        this.x += Math.cos(angle) * this.speed * (1 / 60);
+        this.y += Math.sin(angle) * this.speed * (1 / 60);
+        if (this.isBuffed) {
+          this.color = '#ff6b81'; // Red
+        }
+      }
+      draw(ctx) {
+        // Health bar
+        if (this.health < this.maxHealth) {
+          ctx.fillStyle = '#555';
+          ctx.fillRect(this.x - this.radius, this.y - this.radius - 10, this.radius * 2, 5);
+          ctx.fillStyle = '#c95b6a';
+          ctx.fillRect(this.x - this.radius, this.y - this.radius - 10, (this.radius * 2) * (this.health / this.maxHealth), 5);
+        }
+        // Body
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      takeDamage(amount, game) {
+        if (this.isDead) return 0;
+        const damageDealt = Math.min(this.health, amount);
+        this.health -= amount;
+        if (this.health <= 0) {
+          this.isDead = true;
+          this.die(game);
+        }
+        return damageDealt;
+      }
+      die(game) {
+        game.removeEnemy(this);
+        // Kill orbitals
+        for (const orb of this.orbitals) {
+          game.removeEntity(orb);
+        }
+        let dropCoin = true;
+        if (game.bossSpawned && game.enemies.length > 0 && (game.enemies[0] instanceof ClonerBoss || game.enemies[0] instanceof GodBoss)) {
+          if (Math.random() > 0.33) dropCoin = false;
+        }
+        if (dropCoin) {
+          for (let i = 0; i < this.coinValue; i++) {
+            game.addCoin(new Coin(this.x, this.y, 1));
+          }
+        }
+        for (let i = 0; i < 15; i++) {
+          game.addParticle(new Particle(this.x, this.y, this.color));
+        }
+      }
+    }
+    // --- Standard Enemies ---
+    class BasicEnemy extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 10;
+        const baseSpeed = 100;
+        const baseDamage = 10;
+        const health = (baseHealth * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        let speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier + Math.random() * 50;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 8, '#c95b6a', Math.round(damage), speed, 1);
+      }
+    }
+    class FastEnemy extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 5;
+        const baseSpeed = 180;
+        const baseDamage = 5;
+        const health = (baseHealth * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier + Math.random() * 20;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 6, '#d4b23f', Math.round(damage), speed, 1); // Gold color
+      }
+    }
+    class StrongEnemy extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 30;
+        const baseSpeed = 60;
+        const baseDamage = 25;
+        const health = (baseHealth * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier + Math.random() * 10;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 14, '#6a4a6a', Math.round(damage), speed, 2); // Dark Purple
+      }
+    }
+    class ShootingEnemy extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 15;
+        const baseSpeed = 40;
+        const baseDamage = 10;
+        const health = (baseHealth * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 10, '#5a9e6b', Math.round(damage), speed, 2); // Green
+        this.shootTimer = 2.0;
+        this.bulletDamage = damage;
+        this.wave = wave;
+      }
+      update(game) {
+        if (this.isDead) return;
+        const target = game.player;
+        const dist = Math.hypot(target.x - this.x, target.y - this.y);
+        const angle = Math.atan2(target.y - this.y, target.x - this.x);
+        if (dist < 250) {
+          this.x -= Math.cos(angle) * this.speed * (1 / 60);
+          this.y -= Math.sin(angle) * this.speed * (1 / 60);
+        } else if (dist > 300) {
+          this.x += Math.cos(angle) * this.speed * (1 / 60);
+          this.y += Math.sin(angle) * this.speed * (1 / 60);
+        }
+        this.shootTimer -= 1 / 60;
+        if (this.shootTimer <= 0) {
+          this.fire(game);
+          this.shootTimer = Math.max(0.5, 3.0 - this.wave * 0.1);
+        }
+        if (this.isBuffed) this.color = '#ff6b81';
+      }
+      fire(game) {
+        const target = game.player;
+        const angle = Math.atan2(target.y - this.y, target.x - this.x);
+        let orbitalChance = 0;
+        // Mage/God Boss Buff
+        if (this.orbitals.length > 0) {
+          if (this.isBuffed) orbitalChance = 0.10; // God Boss
+          else orbitalChance = 0.15; // Mage
+        }
+        const bulletProps = {
+          speed: 250,
+          duration: 2.0,
+          damage: this.bulletDamage,
+          isEnemyBullet: true,
+          isOrbitalBullet: Math.random() < orbitalChance
+        };
+        if (this.canFireFromOrbitals && this.orbitals.length > 0) {
+          // Fire from orbitals
+          for (const orb of this.orbitals) {
+            const angleOrb = Math.atan2(target.y - orb.y, target.x - orb.x);
+            game.addBullet(new Bullet(angleOrb, {
+              ...bulletProps,
+              x: orb.x,
+              y: orb.y
+            }));
+          }
+        } else {
+          // Fire normally
+          game.addBullet(new Bullet(angle, {
+            ...bulletProps,
+            x: this.x,
+            y: this.y
+          }));
+        }
+      }
+    }
+    // --- Base Bosses ---
+    class SpawnerBoss extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 500;
+        const baseSpeed = 50;
+        const baseDamage = 40;
+        const health = (baseHealth * (1.2 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 40, '#8b5f8b', Math.round(damage), speed, 50);
+        this.spawnMinionTimer = Math.max(0.5, 3.0 - wave * 0.1);
+        this.wave = wave;
+        this.difficultyMultiplier = difficultyMultiplier;
+      }
+      update(game) {
+        super.update(game); // Basic chase
+        if (this.isDead) return;
+        this.spawnMinionTimer -= 1 / 60;
+        if (this.spawnMinionTimer <= 0) {
+          const rand = Math.random();
+          if (rand < 0.33) game.addEnemy(new BasicEnemy(this.x, this.y, this.wave, this.difficultyMultiplier));
+          else if (rand < 0.66) game.addEnemy(new FastEnemy(this.x, this.y, this.wave, this.difficultyMultiplier));
+          else game.addEnemy(new StrongEnemy(this.x, this.y, this.wave, this.difficultyMultiplier));
+          this.spawnMinionTimer = Math.max(0.5, 3.0 - this.wave * 0.1);
+        }
+      }
+      die(game) {
+        super.die(game);
+        game.onBossDefeated(this);
+      }
+    }
+    class OrbitalBoss extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 700;
+        const baseSpeed = 40;
+        const baseDamage = 30;
+        const health = (baseHealth * (1.2 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 35, '#4a7cab', Math.round(damage), speed, 50);
+        this.wave = wave;
+        this.difficultyMultiplier = difficultyMultiplier;
+        this.numOrbitals = 3;
+      }
+      update(game) {
+        super.update(game);
+        if (this.isDead) return;
+        if (this.orbitals.length < this.numOrbitals) {
+          const index = this.orbitals.length;
+          const angleOffset = (index * (Math.PI * 2)) / this.numOrbitals;
+          const orbitalDamage = 20 * (1.15 ** (this.wave - 1)) * this.difficultyMultiplier;
+          const orbital = new Orbital(this, angleOffset, orbitalDamage, 80, this.numOrbitals);
+          this.orbitals.push(orbital);
+          game.addEntity(orbital);
+        }
+      }
+      die(game) {
+        for (const orb of this.orbitals) game.removeEntity(orb);
+        super.die(game);
+        game.onBossDefeated(this);
+      }
+    }
+    class ShooterBoss extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 400;
+        const baseSpeed = 80;
+        const baseDamage = 20;
+        const health = (baseHealth * (1.2 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 30, '#5a9e6b', Math.round(damage), speed, 50);
+        this.wave = wave;
+        this.difficultyMultiplier = difficultyMultiplier;
+        this.shootTimer = Math.max(0.5, 1.5 - wave * 0.05);
+        this.burstTimer = 0.1;
+        this.shotsInBurst = 3;
+        this.shotsFired = 0;
+        this.bulletDamage = damage;
+      }
+      update(game) {
+        if (this.isDead) return;
+        const target = game.player;
+        const angleToPlayer = Math.atan2(target.y - this.y, target.x - this.x);
+        let isOffscreen = false;
+        if (this.x < this.radius) {
+          this.x += this.speed * (1 / 60);
+          isOffscreen = true;
+        } else if (this.x > game.width - this.radius) {
+          this.x -= this.speed * (1 / 60);
+          isOffscreen = true;
+        }
+        if (this.y < this.radius) {
+          this.y += this.speed * (1 / 60);
+          isOffscreen = true;
+        } else if (this.y > game.height - this.radius) {
+          this.y -= this.speed * (1 / 60);
+          isOffscreen = true;
+        }
+        if (isOffscreen) return;
+        const dist = Math.hypot(target.x - this.x, target.y - this.y);
+        if (dist < 300) {
+          this.x -= Math.cos(angleToPlayer) * this.speed * (1 / 60);
+          this.y -= Math.sin(angleToPlayer) * this.speed * (1 / 60);
+        } else if (dist > 350) {
+          this.x += Math.cos(angleToPlayer) * this.speed * (1 / 60);
+          this.y += Math.sin(angleToPlayer) * this.speed * (1 / 60);
+        } else {
+          this.x += Math.cos(angleToPlayer + Math.PI / 2) * this.speed * 0.5 * (1 / 60);
+          this.y += Math.sin(angleToPlayer + Math.PI / 2) * this.speed * 0.5 * (1 / 60);
+        }
+        if (this.shotsFired > 0) {
+          this.burstTimer -= 1 / 60;
+          if (this.burstTimer <= 0) {
+            this.fireBullet(game, angleToPlayer);
+            this.shotsFired--;
+            this.burstTimer = 0.1;
+          }
+        } else {
+          this.shootTimer -= 1 / 60;
+          if (this.shootTimer <= 0) {
+            this.shotsFired = this.shotsInBurst;
+            this.shootTimer = Math.max(0.5, 2.0 - this.wave * 0.05);
+          }
+        }
+      }
+      fireBullet(game, angle) {
+        const bulletProps = {
+          x: this.x,
+          y: this.y,
+          speed: 300,
+          duration: 2.0,
+          damage: this.bulletDamage,
+          isEnemyBullet: true,
+          isOrbitalBullet: false
+        };
+        const spread = (Math.random() - 0.5) * 0.1;
+        game.addBullet(new Bullet(angle + spread, bulletProps));
+      }
+      die(game) {
+        super.die(game);
+        game.onBossDefeated(this);
+      }
+    }
+    // --- Titan Bosses ---
+    class MachineGunBoss extends ShooterBoss {
+      constructor(x, y, wave, difficultyMultiplier) {
+        super(x, y, wave, difficultyMultiplier);
+        this.color = '#a0c78a'; // Paler green
+        this.shootTimer = Math.max(0.2, 1.0 - wave * 0.05); // Faster
+        this.burstTimer = 0.05; // Faster burst
+        this.shotsInBurst = 5;
+      }
+      fireBullet(game, angle) {
+        const bulletProps = {
+          x: this.x,
+          y: this.y,
+          speed: 350,
+          duration: 2.0,
+          damage: this.bulletDamage,
+          isEnemyBullet: true,
+          isOrbitalBullet: false,
+          homing: 0.5 // Slight homing
+        };
+        const spread = (Math.random() - 0.5) * 0.2;
+        game.addBullet(new Bullet(angle + spread, bulletProps));
+      }
+    }
+    class GeneralBoss extends SpawnerBoss {
+      constructor(x, y, wave, difficultyMultiplier) {
+        super(x, y, wave, difficultyMultiplier);
+        this.color = '#c7a3c7'; // Paler purple
+        this.spawnMinionTimer = Math.max(1.0, 4.0 - wave * 0.1); // Slower spawn, but...
+        this.numToSpawn = 4;
+      }
+      update(game) {
+        super.update(game); // Basic chase
+        if (this.isDead) return;
+        this.spawnMinionTimer -= 1 / 60;
+        if (this.spawnMinionTimer <= 0) {
+          for (let i = 0; i < this.numToSpawn; i++) {
+            // Spawn minions randomly on map
+            const spawnX = Math.random() * game.width;
+            const spawnY = Math.random() * game.height;
+            const rand = Math.random();
+            if (rand < 0.33) game.addEnemy(new BasicEnemy(spawnX, spawnY, this.wave, this.difficultyMultiplier));
+            else if (rand < 0.66) game.addEnemy(new FastEnemy(spawnX, spawnY, this.wave, this.difficultyMultiplier));
+            else game.addEnemy(new StrongEnemy(spawnX, spawnY, this.wave, this.difficultyMultiplier));
+          }
+          this.spawnMinionTimer = Math.max(1.0, 4.0 - this.wave * 0.1);
+        }
+      }
+    }
+    class SlicerBoss extends OrbitalBoss {
+      constructor(x, y, wave, difficultyMultiplier) {
+        super(x, y, wave, difficultyMultiplier);
+        this.color = '#8abec7'; // Paler blue
+        this.numOrbitals = 5;
+        this.bouncingShield = new BouncingShield(this.x, this.y, this.damage, game);
+        game.addEntity(this.bouncingShield);
+      }
+      die(game) {
+        game.removeEntity(this.bouncingShield); // Kill extra shield
+        super.die(game);
+      }
+    }
+    // --- Fusion Bosses ---
+    class ClonerBoss extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 800;
+        const baseSpeed = 60;
+        const baseDamage = 30;
+        const health = (baseHealth * (1.2 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 35, '#E07C7C', Math.round(damage), speed, 50);
+        this.wave = wave;
+        this.difficultyMultiplier = difficultyMultiplier;
+        this.spawnMinionTimer = Math.max(1.0, 5.0 - wave * 0.1);
+        this.shootMinionTimer = Math.max(0.5, 3.0 - wave * 0.1);
+      }
+      update(game) {
+        super.update(game); // Basic chase
+        if (this.isDead) return;
+        // 1. Spawn ShootingEnemy
+        this.spawnMinionTimer -= 1 / 60;
+        if (this.spawnMinionTimer <= 0) {
+          game.addEnemy(new ShootingEnemy(this.x, this.y, this.wave, this.difficultyMultiplier));
+          this.spawnMinionTimer = Math.max(1.0, 5.0 - this.wave * 0.1);
+        }
+        // 2. "Shoot" FastEnemy volley
+        this.shootMinionTimer -= 1 / 60;
+        if (this.shootMinionTimer <= 0) {
+          for (let i = 0; i < 3; i++) {
+            const enemy = new FastEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+            enemy.color = '#ff6b81'; // Make it red
+            enemy.speed *= 1.5; // Speed buff
+            const angle = Math.atan2(game.player.y - this.y, game.player.x - this.x) + (Math.random() - 0.5) * 0.3;
+            enemy.x += Math.cos(angle) * 30; // Push forward
+            enemy.y += Math.sin(angle) * 30;
+            game.addEnemy(enemy);
+          }
+          this.shootMinionTimer = Math.max(0.5, 3.0 - this.wave * 0.1);
+        }
+      }
+      die(game) {
+        super.die(game);
+        game.onBossDefeated(this);
+      }
+    }
+    class EngineerBoss extends OrbitalBoss {
+      constructor(x, y, wave, difficultyMultiplier) {
+        super(x, y, wave, difficultyMultiplier);
+        this.numOrbitals = 4;
+        this.color = '#c7c78a'; // Pale yellow-green
+        this.shootTimer = Math.max(0.8, 3.0 - wave * 0.1);
+        this.shotsInBurst = 4;
+        this.shotsFired = 0;
+      }
+      update(game) {
+        super.update(game); // Creates orbitals
+        if (this.isDead) return;
+        // Make orbitals able to fire
+        for (const orb of this.orbitals) {
+          orb.canFire = true;
+          orb.bulletDamage = this.damage;
+          orb.shootTimer = this.shootTimer;
+          orb.isOrbitalBullet = Math.random() < 0.05; // 5% chance
+        }
+      }
+    }
+    class MageBoss extends SpawnerBoss {
+      constructor(x, y, wave, difficultyMultiplier) {
+        super(x, y, wave, difficultyMultiplier);
+        this.color = '#8aadc7'; // Pale blue
+      }
+      update(game) {
+        super.update(game); // Basic chase
+        if (this.isDead) return;
+        this.spawnMinionTimer -= 1 / 60;
+        if (this.spawnMinionTimer <= 0) {
+          let enemy;
+          const rand = Math.random();
+          if (rand < 0.33) enemy = new BasicEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+          else if (rand < 0.66) enemy = new FastEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+          else enemy = new ShootingEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+          // Add orbitals to the minion
+          for (let i = 0; i < 2; i++) {
+            const orb = new Orbital(enemy, (i * Math.PI), this.damage * 0.5, 20, 2);
+            enemy.orbitals.push(orb);
+            game.addEntity(orb);
+          }
+          game.addEnemy(enemy);
+          this.spawnMinionTimer = Math.max(0.8, 4.0 - this.wave * 0.1);
+        }
+      }
+    }
+    // --- FINAL BOSS ---
+    class GodBoss extends Enemy {
+      constructor(x, y, wave, difficultyMultiplier) {
+        const baseHealth = 10000;
+        const baseSpeed = 40;
+        const baseDamage = 50;
+        const health = (baseHealth * (1.2 ** (wave - 1))) * difficultyMultiplier;
+        const speed = (baseSpeed * (1.1 ** (wave - 1))) * difficultyMultiplier;
+        const damage = (baseDamage * (1.15 ** (wave - 1))) * difficultyMultiplier;
+        super(x, y, Math.round(health), 50, '#FFFFFF', Math.round(damage), speed, 100);
+        this.wave = wave;
+        this.difficultyMultiplier = difficultyMultiplier;
+        this.orbitals = [];
+        this.numOrbitals = 3;
+        this.spawnMinionTimer = Math.max(1.0, 4.0 - wave * 0.1);
+        this.shootMinionTimer = Math.max(0.8, 3.5 - wave * 0.1);
+      }
+      update(game) {
+        super.update(game); // Basic chase
+        if (this.isDead) return;
+        // 1. Create & configure orbitals
+        if (this.orbitals.length < this.numOrbitals) {
+          const index = this.orbitals.length;
+          const angleOffset = (index * (Math.PI * 2)) / this.numOrbitals;
+          const orbitalDamage = 30 * (1.15 ** (this.wave - 1)) * this.difficultyMultiplier;
+          const orbital = new Orbital(this, angleOffset, orbitalDamage, 100, this.numOrbitals);
+          // Engineer part
+          orbital.canFire = true;
+          orbital.bulletDamage = this.damage * 0.75;
+          orbital.isOrbitalBullet = Math.random() < 0.10; // 10% chance
+          this.orbitals.push(orbital);
+          game.addEntity(orbital);
+        }
+        // 2. Spawner/Mage part
+        this.spawnMinionTimer -= 1 / 60;
+        if (this.spawnMinionTimer <= 0) {
+          let enemy;
+          const rand = Math.random();
+          if (rand < 0.25) enemy = new BasicEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+          else if (rand < 0.5) enemy = new FastEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+          else if (rand < 0.75) enemy = new StrongEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+          else enemy = new ShootingEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+          // Cloner Buff
+          enemy.isBuffed = true;
+          enemy.speed *= 1.2;
+          // Mage Buff
+          if (Math.random() < 0.50) { // 50% chance
+            for (let i = 0; i < 2; i++) {
+              const orb = new Orbital(enemy, (i * Math.PI), this.damage * 0.5, 20, 2);
+              // Engineer Buff
+              if (enemy instanceof ShootingEnemy) {
+                enemy.canFireFromOrbitals = true;
+                orb.canFire = true;
+                orb.bulletDamage = enemy.bulletDamage * 0.5;
+                orb.isOrbitalBullet = Math.random() < 0.10; // 10% chance
+              }
+              enemy.orbitals.push(orb);
+              game.addEntity(orb);
+            }
+          }
+          game.addEnemy(enemy);
+          this.spawnMinionTimer = Math.max(1.0, 4.0 - this.wave * 0.1);
+        }
+        // 3. Cloner part
+        this.shootMinionTimer -= 1 / 60;
+        if (this.shootMinionTimer <= 0) {
+          for (let i = 0; i < 3; i++) {
+            const enemy = new FastEnemy(this.x, this.y, this.wave, this.difficultyMultiplier);
+            enemy.color = '#ff6b81';
+            enemy.speed *= 1.5;
+            const angle = Math.atan2(game.player.y - this.y, game.player.x - this.x) + (Math.random() - 0.5) * 0.3;
+            enemy.x += Math.cos(angle) * 30;
+            enemy.y += Math.sin(angle) * 30;
+            game.addEnemy(enemy);
+          }
+          this.shootMinionTimer = Math.max(0.8, 3.5 - this.wave * 0.1);
+        }
+      }
+      die(game) {
+        for (const orb of this.orbitals) game.removeEntity(orb);
+        super.die(game);
+        game.onBossDefeated(this);
+      }
+    }
+    // --- Coin Class ---
+    class Coin {
+      constructor(x, y, value) {
+        this.x = x + (Math.random() - 0.5) * 10;
+        this.y = y + (Math.random() - 0.5) * 10;
+        this.value = value;
+        this.radius = 4;
+        this.color = '#d4b23f'; // Duller gold
+        this.drawOrder = 1;
+        this.vx = (Math.random() - 0.5) * 100;
+        this.vy = (Math.random() - 0.5) * 100;
+        this.drag = 0.95;
+      }
+      update(game) {
+        if (!game.player) return;
+        // Magnet
+        const player = game.player;
+        let dist = Math.hypot(this.x - player.x, this.y - player.y);
+        if (player.stats.globalMagnet) {
+          dist = 1; // Force pull
+        }
+        if (dist < player.stats.coinMagnet || player.stats.globalMagnet) {
+          const angle = Math.atan2(player.y - this.y, player.x - this.x);
+          const speed = 300;
+          this.vx = Math.cos(angle) * speed;
+          this.vy = Math.sin(angle) * speed;
+        } else {
+          // Initial pop
+          this.vx *= this.drag;
+          this.vy *= this.drag;
+        }
+        this.x += this.vx * (1 / 60);
+        this.y += this.vy * (1 / 60);
+      }
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // --- Particle Class ---
+    class Particle {
+      constructor(x, y, color, life = 0.7, radius = 0) {
+        this.x = x;
+        this.y = y;
+        // If radius is 0, pick random. Otherwise use provided.
+        this.radius = radius > 0 ? radius : Math.random() * 3 + 1;
+        this.color = color;
+        this.drawOrder = 20;
+        this.life = life;
+        this.maxLife = life;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = radius > 0 ? 0 : Math.random() * 150 + 50; // No speed for shockwave
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.drag = 0.94;
+      }
+      update(game) {
+        this.life -= 1 / 60;
+        if (this.life <= 0) {
+          game.removeParticle(this);
+          return;
+        }
+        this.vx *= this.drag;
+        this.vy *= this.drag;
+        this.x += this.vx * (1 / 60);
+        this.y += this.vy * (1 / 60);
+      }
+      draw(ctx) {
+        ctx.globalAlpha = this.life / this.maxLife; // Fade out
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+      }
+    }
+    // --- Joystick Class ---
+    class Joystick {
+      constructor(width, height) {
+        this.basePos = {
+          x: 0,
+          y: 0
+        };
+        this.knobPos = {
+          x: 0,
+          y: 0
+        };
+        this.moveVector = {
+          x: 0,
+          y: 0
+        };
+        this.baseRadius = 60;
+        this.knobRadius = 25;
+        this.maxMove = this.baseRadius - this.knobRadius;
+        this.isActive = false;
+        this.touchId = null;
+        this.activationZone = {
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0
+        };
+        this.setDimensions(width, height);
+      }
+      setDimensions(width, height) {
+        // Activate in the bottom-left half of the screen
+        this.activationZone.x = 0;
+        this.activationZone.y = height / 2;
+        this.activationZone.width = width / 2;
+        this.activationZone.height = height / 2;
+      }
+      onTouchStart(e) {
+        // *** FIX: Check if game state is not 'running' ***
+        if (game.gameState !== 'running') {
+          this.isActive = false;
+          this.touchId = null;
+          return;
+        }
+        if (e.target !== canvas) return; // Ignore touches on HTML elements
+        e.preventDefault();
+        if (this.isActive) return;
+        const touch = e.changedTouches[0];
+        // Check if touch is in the activation zone
+        if (touch.clientX >= this.activationZone.x &&
+          touch.clientX <= this.activationZone.width &&
+          touch.clientY >= this.activationZone.y &&
+          touch.clientY <= this.activationZone.y + this.activationZone.height) {
+          this.touchId = touch.identifier;
+          this.isActive = true;
+          this.basePos = {
+            x: touch.clientX,
+            y: touch.clientY
+          };
+          this.knobPos = {
+            x: touch.clientX,
+            y: touch.clientY
+          };
+          this.moveVector = {
+            x: 0,
+            y: 0
+          };
+        }
+      }
+      onTouchMove(e) {
+        // *** FIX: Check if game state is not 'running' ***
+        if (game.gameState !== 'running') return;
+        if (e.target !== canvas) return;
+        e.preventDefault();
+        if (!this.isActive) return;
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
+        if (touch) {
+          const dx = touch.clientX - this.basePos.x;
+          const dy = touch.clientY - this.basePos.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > this.maxMove) {
+            this.knobPos.x = this.basePos.x + (dx / dist) * this.maxMove;
+            this.knobPos.y = this.basePos.y + (dy / dist) * this.maxMove;
+            this.moveVector.x = dx / dist;
+            this.moveVector.y = dy / dist;
+          } else {
+            this.knobPos.x = touch.clientX;
+            this.knobPos.y = touch.clientY;
+            this.moveVector.x = dx / this.maxMove;
+            this.moveVector.y = dy / this.maxMove;
+          }
+        }
+      }
+      onTouchEnd(e) {
+        // *** FIX: Check if game state is not 'running' ***
+        if (game.gameState !== 'running') {
+          this.isActive = false;
+          this.touchId = null;
+          return;
+        }
+        if (e.target !== canvas) return;
+        e.preventDefault();
+        if (!this.isActive) return;
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.touchId);
+        if (touch) {
+          this.isActive = false;
+          this.touchId = null;
+          this.moveVector = {
+            x: 0,
+            y: 0
+          };
+        }
+      }
+      draw(ctx) {
+        if (!this.isActive) return;
+        // Draw base
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.beginPath();
+        ctx.arc(this.basePos.x, this.basePos.y, this.baseRadius, 0, Math.PI * 2);
+        ctx.fill();
+        // Draw knob
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath();
+        ctx.arc(this.knobPos.x, this.knobPos.y, this.knobRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // --- Init Game ---
+    game = new Game();
+    // --- UI Event Listeners ---
+    // Start Screen
+    document.getElementById('normalModeButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      screens.start.style.display = 'none';
+      screens.difficulty.style.display = 'flex';
+    });
+    document.getElementById('bossRushButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.start('bossrush', false, 1.25); // Boss Rush is "Normal" difficulty
+    });
+    document.getElementById('sandboxButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.start('sandbox', false, 1.25); // Sandbox is "Normal" difficulty
+    });
+    document.getElementById('backToMenuButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      screens.start.style.display = 'flex';
+      screens.difficulty.style.display = 'none';
+    });
+    document.querySelectorAll('.difficulty-button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const difficulty = parseFloat(button.dataset.difficulty);
+        game.start('normal', false, difficulty);
+      });
+    });
+    document.getElementById('easyTowerButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.start('tower', false, 1.0); // Tower mode, NOT hard, 1.0x start
+    });
+    document.getElementById('hardTowerButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.start('tower', true, 1.0); // Tower mode, IS hard, 1.0x start
+    });
+    document.getElementById('changelogButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      screens.changelog.style.display = 'flex';
+    });
+    document.getElementById('closeChangelogButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      screens.changelog.style.display = 'none';
+    });
+    // Game Over Screen
+    screens.restartButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.init(); // Go back to title screen
+    });
+    screens.reviveButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.revivePlayer();
+    });
+    // Floor Complete Screen
+    document.getElementById('nextFloorButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.nextFloor();
+    });
+    document.getElementById('titleScreenButton').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.init(); // Go back to title screen
+    });
+    // Pause Screen Listeners
+    screens.pauseButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.pauseGame();
+    });
+    screens.resumeButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.resumeGame();
+    });
+    screens.pauseReturnToMenuButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.init();
+    });
+    screens.statsButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.showStats();
+    });
+    screens.closeStatsButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      screens.statsScreen.style.display = 'none';
+    });
+    screens.upgradesButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.showUpgrades();
+    });
+    screens.closeUpgradesButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      screens.upgradesScreen.style.display = 'none';
+    });
+    // --- Admin Panel Listeners ---
+    document.getElementById('adminCollapse').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const btn = e.target;
+      const container = document.getElementById('adminPanelContainer');
+      if (container.style.display === 'none') {
+        container.style.display = 'flex';
+        btn.textContent = 'Collapse';
+      } else {
+        container.style.display = 'none';
+        btn.textContent = 'Expand';
+      }
+    });
+    document.getElementById('adminStopSpawn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.stopSpawning = true;
+    });
+    document.getElementById('adminStartSpawn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.stopSpawning = false;
+    });
+    document.getElementById('adminSpawnBoss').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.spawnBoss(true);
+    });
+    document.getElementById('adminBasicUpg').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.pauseForLevelUp();
+    });
+    document.getElementById('adminRareUpg').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.pauseForChest();
+    });
+    document.getElementById('adminInvincible').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const btn = document.getElementById('adminInvincible');
+      if (game.player.isPermanentlyInvincible) {
+        game.player.isPermanentlyInvincible = false;
+        game.player.isInvincible = false;
+        btn.textContent = 'Invincible';
+        btn.style.borderColor = '#555';
+      } else {
+        game.player.isPermanentlyInvincible = true;
+        btn.textContent = 'Invincible: ON';
+        btn.style.borderColor = '#FFD700';
+      }
+    });
+    // --- Sandbox Panel Listeners ---
+    // Left Panel
+    document.getElementById('sandboxInvincible').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const btn = e.target;
+      if (game.player.isPermanentlyInvincible) {
+        game.player.isPermanentlyInvincible = false;
+        game.player.isInvincible = false;
+        btn.textContent = 'Toggle Invincible';
+        btn.style.borderColor = '#555';
+      } else {
+        game.player.isPermanentlyInvincible = true;
+        btn.textContent = 'Invincible: ON';
+        btn.style.borderColor = '#FFD700';
+      }
+    });
+    document.getElementById('sandboxResetPlayer').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.player.reset(game);
+    });
+    // Right Panel
+    document.getElementById('sandboxBasicUpg').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.pauseForLevelUp();
+    });
+    document.getElementById('sandboxRareUpg').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.pauseForChest();
+    });
+    document.getElementById('sandboxSetStats').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const stat = prompt('Stat? (damage, fireRate, reloadTime, magSize, bulletSpeed, bulletDuration, pierce, chain, ricochet, edgeBounce, homing, splitShot, speed)');
+      if (stat && game.player.stats.hasOwnProperty(stat)) {
+        const value = parseFloat(prompt(`Set ${stat} to: (current: ${game.player.stats[stat]})`));
+        if (!isNaN(value)) {
+          game.player.stats[stat] = value;
+          game.player.ammoInMag = game.player.stats.magSize; // Update mag
+        }
+      }
+    });
+    // Bottom Panel
+    document.getElementById('sandboxToggleSpawn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.stopSpawning = !game.stopSpawning;
+    });
+    document.getElementById('sandboxSetWave').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wave = parseInt(prompt(`Set wave to: (current: ${game.wave})`));
+      if (!isNaN(wave) && wave > 0) game.wave = wave;
+    });
+    document.getElementById('sandboxSpawnEnemy').addEventListener('click', (e) => {
+      e.stopPropagation();
+      game.spawnEnemy();
+    });
+    document.getElementById('sandboxSpawnBoss').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const bosses = [SpawnerBoss, OrbitalBoss, ShooterBoss];
+      const BossToSpawn = bosses[Math.floor(Math.random() * bosses.length)];
+      game.addEnemy(new BossToSpawn(game.player.x + 100, game.player.y, game.wave, game.difficultyMultiplier));
+    });
+    document.getElementById('sandboxSpawnTitan').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const bosses = [MachineGunBoss, GeneralBoss, SlicerBoss];
+      const BossToSpawn = bosses[Math.floor(Math.random() * bosses.length)];
+      game.addEnemy(new BossToSpawn(game.player.x + 100, game.player.y, game.wave, game.difficultyMultiplier));
+    });
+    document.getElementById('sandboxSpawnFusion').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const bosses = [ClonerBoss, EngineerBoss, MageBoss, GodBoss];
+      const BossToSpawn = bosses[Math.floor(Math.random() * bosses.length)];
+      game.addEnemy(new BossToSpawn(game.player.x + 100, game.player.y, game.wave, game.difficultyMultiplier));
+    });
+    document.getElementById('sandboxClearEnemies').addEventListener('click', (e) => {
+      e.stopPropagation();
+      for (const enemy of [...game.enemies]) {
+        enemy.die(game); // Use die() to handle particles and orbital/shield cleanup
+      }
+      // Manually clear any lingering BouncingShields
+      for (const entity of [...game.entities]) {
+        if (entity instanceof BouncingShield) {
+          game.removeEntity(entity);
+        }
+      }
+    });
+    setTimeout(function() {
+      document.getElementById("thumbnail").remove();
+    }, 2000)
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "f" || e.key === "F") {
+        toggleFullscreen();
+      } else if (e.ctrlKey) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+  </script>
+</body>
+
+</html>
